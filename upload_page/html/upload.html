@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    
+    <title>文件上传</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/cover.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+    <script src="html5shiv.min.js"></script>
+    <script src="respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <div class="site-wrapper">
+      <div class="site-wrapper-inner">
+        <div class="cover-container">
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand"><a href="/">www.speed.com</a></h3>
+            </div>
+          </div>
+
+          <div class="inner cover">
+			  <h1 class="cover-heading">文件上传<h1>
+            <br/>
+              <input type="ip" class="form-control input-lg" name="ip" placeholder="" autofocus>
+			  <br/>
+			  <form class="form-inline" role="form" method="POST">
+              <button class="btn btn-default btn-lg">选择文件</button>
+			  <a class="btn" id="choosefile">
+              <button id="upload" class="btn btn-default btn-lg" >上传</button>
+			  </form>
+          </div>
+
+		  <div class="row">
+			  <div class="col-xs-12 myimg" >
+			  </div>
+		  </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+            </div>
+          </div>
+
+		  <div style="display:none">
+		    <img class="progress_img img-responsive" style="float:left;max-width:50px" src="">
+		  </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+	//function upload_click() {
+	//		$.ajax({
+  	//			xhr: function() {
+  	//			  var xhr = new window.XMLHttpRequest();
+
+  	//			  xhr.upload.addEventListener("progress", function(evt) {
+  	//			    if (evt.lengthComputable) {
+  	//			      var percentComplete = evt.loaded / evt.total;
+  	//			      percentComplete = parseInt(percentComplete * 100);
+  	//			      console.log(percentComplete);
+
+  	//			      if (percentComplete === 100) {
+
+  	//			      }
+  	//			    }
+  	//			  }, false);
+
+  	//			  return xhr;
+  	//			},
+  	//			url: posturlfile,
+  	//			type: "POST",
+  	//			data: JSON.stringify(fileuploaddata),
+  	//			contentType: "application/json",
+  	//			dataType: "json",
+  	//			success: function(result) {
+  	//			  console.log(result);
+  	//			}
+	//		});
+	//}
+	$(document).ready(function(){
+		});
+</script>

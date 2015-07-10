@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    
+    <title>文件上传</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/cover.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+    <script src="html5shiv.min.js"></script>
+    <script src="respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <div class="site-wrapper">
+      <div class="site-wrapper-inner">
+        <div class="cover-container">
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand"><a href="/">www.speed.com</a></h3>
+            </div>
+          </div>
+
+          <div class="inner cover">
+			  <h1 class="cover-heading">文件上传<h1>
+            <br/>
+              <input type="ip" class="form-control input-lg" name="ip" placeholder="" autofocus>
+			  <br/>
+              <button type="submit" class="btn btn-default btn-lg">选择文件</button>
+              <button id="upload" class="btn btn-default btn-lg" >上传</button>
+          </div>
+
+		  <div class="row">
+			  <div class="col-xs-12 myimg" >
+			  </div>
+		  </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+            </div>
+          </div>
+
+		  <div style="display:none">
+		    <img class="progress_img img-responsive" style="float:left;max-width:50px" src="">
+		  </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+	function new_snap() {
+		$.get("1.pl", function(data){
+				console.log(data);
+				if(data!="") {
+				  if (img_count >= 14) {
+					$(".progress_img:first").remove();
+				  }
+				  var new_img_node = $(".progress_img:first").clone();
+				  $(new_img_node).attr("src", data);
+				  $(new_img_node).hide();
+				  $(".myimg").append($(new_img_node));
+				  $(new_img_node).fadeIn("slow");
+				  img_count += 1;
+				}
+			});
+	}
+	
+	
+	function upload_start() {
+		img_interval_id = setInterval(new_snap, 1000);
+		uploadfile();
+		progressbar_interval_id = setInterval(progress_bar, 1000);
+	}
+
+	function progress_bar() {
+		$.get("progress_bar.pl", function(data){
+				if (data ==  10) {
+					$(".myimg").html('<p>上传结束</p>');
+					clearInterval(img_interval_id);
+					clearInterval(progressbar_interval_id);
+				}
+			});
+	}
+
+	function uploadfile() {
+		console.log("uploadfile");			
+	}
+
+	$("#upload").on("click", upload_start );
+
+	var img_count = 0;
+	var img_interval_id;
+	var progressbar_interval_id;
+	$(document).ready(function(){
+		});
+</script>

@@ -1,0 +1,44 @@
+<html lang="zh-CN">
+	<head>
+    <meta charset="utf-8">
+	</head>
+	<body>
+	　　<form id="upload-form" action="action.php" method="post" enctype="multipart/form-data" >
+	　　　　<input type="file" id="upload" name="upload" /> <br />
+	　　　　<input type="submit" value="Upload" />
+		</form>
+	</body>
+</html>
+
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+
+		$('form').on('submit', function() {
+			var formdata = new FormData();		
+			//console.log(  $( '#upload' )[0].files[0] );
+			formdata.append('upload', $( '#upload' )[0].files[0]);
+
+
+			//var formobj =  document.getElementById("upload-form");
+			//var formdata = new FormData(formobj);
+			//console.log(formdata);
+
+			var xhr = new XMLHttpRequest();
+			console.log($(this).attr('action'));
+			xhr.open('POST', $(this).attr('action'));
+
+			xhr.onload = function() {
+				if (xhr.status == 200) {
+					alert("上传成功");			
+				}
+				else {
+					alert("上传失败");	
+				}
+			};
+
+			xhr.send(formdata);
+		});
+});
+</script>
+
