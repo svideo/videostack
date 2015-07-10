@@ -7,6 +7,9 @@
 	　　　　<input type="file" id="upload" name="upload" /> <br />
 	　　　　<input type="submit" value="Upload" />
 		</form>
+		
+		上传进度:
+		<progress value="0" min="0" max="100" id="uploadprogress"></progress>
 	</body>
 </html>
 
@@ -16,13 +19,7 @@ $(document).ready(function(){
 
 		$('form').on('submit', function() {
 			var formdata = new FormData();		
-			//console.log(  $( '#upload' )[0].files[0] );
-			formdata.append('upload', $( '#upload' )[0].files[0]);
-
-
-			//var formobj =  document.getElementById("upload-form");
-			//var formdata = new FormData(formobj);
-			//console.log(formdata);
+			formdata.append('upload', $('#upload')[0].files[0]);
 
 			var xhr = new XMLHttpRequest();
 			console.log($(this).attr('action'));
@@ -37,7 +34,16 @@ $(document).ready(function(){
 				}
 			};
 
+			xhr.upload.onprogress = function (event) {
+			　　if (event.lengthComputable) {
+			　　　　var complete = (event.loaded / event.total * 100 | 0);
+			　　　　var progress = document.getElementById('uploadprogress');
+			　　　　progress.value = progress.innerHTML = complete;
+			　　}
+			};
+
 			xhr.send(formdata);
+
 		});
 });
 </script>

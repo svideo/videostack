@@ -55,7 +55,7 @@
 <script src="/js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
 	function new_snap() {
-		$.get("1.pl", function(data){
+		$.get("img.txt", function(data){
 				console.log(data);
 				if(data!="") {
 				  if (img_count >= 14) {
@@ -79,7 +79,7 @@
 	}
 
 	function progress_bar() {
-		$.get("progress_bar.pl", function(data){
+		$.get("progress_bar.php", function(data){
 				if (data ==  10) {
 					$(".myimg").html('<p>上传结束</p>');
 					clearInterval(img_interval_id);
