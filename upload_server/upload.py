@@ -100,7 +100,7 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
 if __name__ == "__main__":
     try:
-        s = ForkingHTTPServer(("127.0.0.1", 9000), MyServer)
+        s = ForkingHTTPServer(("0.0.0.0", 80), MyServer)
         s.serve_forever()
     except KeyboardInterrupt:
         s.socket.close()

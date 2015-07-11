@@ -98,6 +98,8 @@
 	function uploadfile() {
 		var formdata = new FormData();		
 		formdata.append('upload', $('#upload')[0].files[0]);
+		formdata.append('channel_id', 10000);
+
 		$.ajax({
 			type: "POST",		
 			url : "http://www.speed.com/action.php",
