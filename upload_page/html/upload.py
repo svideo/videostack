@@ -2,6 +2,23 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import socketserver
 import time
 import os
+import hashlib
+
+
+class Transcoder:
+    def handle_body(self, name, body):
+        #if self._content_key == b"channel_id":
+        #    m = hashlib.md5()
+        #    m.update( line ) # line is channel_id
+        #    self.filename = m.hexdigest() + '.flv'
+        #else:
+        #    print("filename" + self.filename)
+        #    f = open(self.filename, 'ab')
+        #    f.write(line)
+        #    f.close()
+        print("----------------------")
+        print(name + b' '+ body)
+        print("----------------------")
 
 
 class MyServer(BaseHTTPRequestHandler):
@@ -22,9 +39,7 @@ class MyServer(BaseHTTPRequestHandler):
         return file_path
 
     def _handle_body(self, line):
-        print(self._content_key)
-        print(line)
-        print("--------------------------------------------")
+        self._handle_class.handle_body(self._content_key, line)
 
     def _handle_a_line(self, line):
         boundary = str.encode(self._boundary)
@@ -61,6 +76,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(f.readall())
 
     def do_POST(self):
+        self._handle_class = Transcoder()
         content_length = int(self.headers.get_all('Content-Length')[0])
         content_type = self.headers.get_all('Content-Type')[0]
         self._boundary = content_type.split('boundary=', maxsplit=1)[1]
@@ -97,6 +113,7 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
     def finish_request(self, request, client_address):
         HTTPServer.finish_request(self, request, client_address)
+
 
 if __name__ == "__main__":
     try:

@@ -97,8 +97,8 @@
 
 	function uploadfile() {
 		var formdata = new FormData();		
-		formdata.append('upload', $('#upload')[0].files[0]);
 		formdata.append('channel_id', 10000);
+		formdata.append('upload', $('#upload')[0].files[0]);
 
 		$.ajax({
 			type: "POST",		
