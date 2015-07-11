@@ -7,11 +7,11 @@ x100speed_transcode Redis 数据结构说明文档
 #### 数据结构
 | Key            | Value         | Type   |
 | -------------- |:-------------:| ------:|
-| channel_id_max | 100000        | String |
+| video_id_max   | 100000        | String |
 
 #### 操作
     初始化
-    SET channel_id_max 100000
+    SET video_id_max 100000
 
     增加Value
     INCR video_id_max
