@@ -2,7 +2,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import socketserver
 import time
 import os
-import hashlib
 from transcoder import Transcoder
 
 
