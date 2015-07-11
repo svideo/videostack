@@ -4,8 +4,8 @@ importScripts('./lib/require.js');
 
 require.config({
 	paths: {
-		jdataview: '//jdataview.github.io/dist/jdataview',
-		jbinary: '//jdataview.github.io/dist/jbinary',
+		jdataview: 'lib/jdataview',
+		jbinary: 'lib/jbinary',
 		async: 'lib/async',
 		consoleTime: './shim/console.time',
 		consoleWorker: './shim/console.worker'
