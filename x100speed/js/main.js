@@ -15,8 +15,7 @@ function playUrl()
         console.log("This m3u8 is single bitrate");
     }
 
-    var browserJs = '<script src="js/hls/browser.js" data-canvas="canvas" data-hls="' + url +'">'
-                  //+ "document.body.classList.remove('loading');"
+    var browserJs = '<script src="lib/hls/browser.js" data-canvas="canvas" data-hls="' + url +'">'
                   + "var converter = this;"
                   + "['play', 'pause'].forEach(function (action) {"
                   + "document.getElementById(action).addEventListener('click', function () {"

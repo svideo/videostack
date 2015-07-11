@@ -7,7 +7,7 @@
 	// preconfiguration using <script>'s data-attributes values
 	var scripts = document.getElementsByTagName('script'),
 		script = scripts[scripts.length - 1],
-		worker = new Worker('js/hls/worker.js'),
+		worker = new Worker('lib/hls/worker.js'),
 		nextIndex = 0,
 		sentVideos = 0,
 		currentVideo = null,
