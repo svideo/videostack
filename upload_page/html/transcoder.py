@@ -39,6 +39,7 @@ class Transcoder:
         m = hashlib.md5()
         m.update(channel_id)
         md5_filename_str = m.hexdigest()
+        print(channel_id)
         target_filename = self.target_filename(md5_filename_str)
         f = open(target_filename, mode='ab')
         self.write_handler = f
