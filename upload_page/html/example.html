@@ -74,7 +74,7 @@
 	
 	function upload_start() {
 		//img_interval_id = setInterval(new_snap, 1000);
-		get_channel_id();
+		get_video_id();
 	}
 
 	function update_progress(e) {
@@ -89,11 +89,13 @@
 		} 
 	}
 
-	function get_channel_id() {
-		$.get("http://10.221.193.196:5000/getvideomaxid", function(data){
-				channel_id = data;
-				upload_file();
-			});
+	function get_video_id() {
+		//$.get("http://10.221.193.196:5000/getvideomaxid", function(data){
+		//		video_id = data;
+		//		upload_file();
+		//	});
+		video_id = 100000;
+		upload_file();
 	}
 
 	function success_upload(e) {
@@ -104,11 +106,7 @@
 
 	function upload_file() {
 		var formdata = new FormData();		
-		//if (!channel_id) {
-		//	return false;	
-		//}
-		console.log(channel_id);
-		formdata.append('channel_id', channel_id);
+		formdata.append('video_id', video_id);
 		formdata.append('upload', $('#upload')[0].files[0]);
 
 		$.ajax({
@@ -144,7 +142,7 @@
 
 	var img_count = 0;
 	var img_interval_id;
-	var channel_id = undefined;
+	var video_id = undefined;
 	$(document).ready(function(){ 
 			});
 </script>
