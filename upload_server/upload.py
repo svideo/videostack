@@ -1,6 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socketserver
-import time
 import os
 
 
@@ -22,32 +21,30 @@ class MyServer(BaseHTTPRequestHandler):
         return file_path
 
     def _handle_body(self, line):
-        f = open("2.jpg", mode="ab")
-        f.write(line)
-        f.close()
+        self._handle_class.handle_body(self._content_key, line)
 
     def _handle_a_line(self, line):
         boundary = str.encode(self._boundary)
         if line.find(boundary) != -1:
-            if self._status_boundary == "OUT":
-                self._status_boundary = "IN"
-            elif self._status_boundary == "IN":
-                self._status_boundary = "OUT"
-                self._status_content = "HEAD"
+            self._status_content = "HEAD"
             return
 
         if line == b"\r\n":
-            if self._status_content == "HEAD":
-                self._status_content = "BODY"
-            elif self._status_content == "BODY":
-                self._status_content = "HEAD"
-            return
-
-        if self._status_boundary == "OUT":
+            self._status_content = "BODY"
             return
 
         if self._status_content == "HEAD":
-            [k, v] = line.split(b": ")
+            [http_header_name, http_header_value] = line.split(b": ")
+            if http_header_name == b'Content-Disposition':
+                values = http_header_value.split(b"; ")
+                for value in values:
+                    if value.find(b"=\"") == -1:
+                        continue;
+                    [header_name, header_value] = value.split(b"=\"")
+                    if header_name == b'name':
+                        [content_key, foo] = header_value.split(b"\"")
+                        self._content_key = content_key
+
         elif self._status_content == "BODY":
             self._handle_body(line)
 
@@ -61,18 +58,19 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(f.readall())
 
     def do_POST(self):
+        self._handle_class = Transcoder()
         content_length = int(self.headers.get_all('Content-Length')[0])
         content_type = self.headers.get_all('Content-Type')[0]
         self._boundary = content_type.split('boundary=', maxsplit=1)[1]
         self.buf = b''
-        self._status_boundary = "OUT"  # OUT, IN
         self._status_content = "HEAD"  # HEAD, BODY
+        self._content_key = ""
 
         new_line = ''
         buf = ''
 
         while content_length > 0:
-            want_byte = 4096
+            want_byte = 40960
             if content_length > want_byte:
                 buf = self.rfile.read(want_byte)
             else:
@@ -97,6 +95,7 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
     def finish_request(self, request, client_address):
         HTTPServer.finish_request(self, request, client_address)
+
 
 if __name__ == "__main__":
     try:
