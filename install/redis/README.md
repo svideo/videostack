@@ -6,16 +6,16 @@ x100speed_transcode Redis 数据结构说明文档
     Hash数据结构存储视频转码状态、截图数量
     key : x100speed_hash_uuid
     field : 视频唯一标识uuid
-    value : 以|分割(status|image_count)，status表示视频转码状态（success、failed、proceed），image_count表示视频截图数量
+    value : 以|分割(status|image_count|ip|bitrate)，status表示视频转码状态（success、failed、proceed），image_count表示视频截图数量，ip为转码机地址, bitrate为视频码率，多个码率用","隔开
 #### 数据结构
-| Describe   | Data Structure | Key                   | Field              | Value                |
-| ---------- |:--------------:|:---------------------:|:------------------:|:--------------------:|
-| field name | hash           | x100speed\_hash\_uuid | uuid               |  status\|image_count |
-| example    | hash           | x100speed\_hash\_uuid | ytmaWHUzDikIGwOLl6 |  success\|200        |
+| Describe   | Data Structure | Key                   | Field              | Value                                       |
+| ---------- |:--------------:|:---------------------:|:------------------:|:-------------------------------------------:|
+| field name | hash           | x100speed\_hash\_uuid | uuid               |  status\|image_count\|ip\|bitrate1,bitrate2 |
+| example    | hash           | x100speed\_hash\_uuid | ytmaWHUzDikIGwOLl6 |  success\|150\|10.209.79.229\|200,400       |
 
 #### 操作
-    更新转码状态、截图数量
-    HSET x100speed_hash_uuid ytmaWHUzDikIGwOLl6 success
+    更新转码状态、截图数量、ip地址、码率
+    HSET x100speed_hash_uuid ytmaWHUzDikIGwOLl6 success|150|10.209.79.229|200,400
 
 ### x100speed\_sortedset\_uuid\_bitrate
 #### 描述

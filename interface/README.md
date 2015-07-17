@@ -3,11 +3,13 @@ x100speed_transcode 接口文档
 
 ### /interface/video\_uuid\_get
 #### 描述
-    id生成器，可生成全球唯一18位id
+    生成全球唯一18位id以及返回video转码机ip地址
 #### 参数
 
 #### 返回值
-    返回18位长度uuid字符串
+    json格式返回18位长度uuid字符串、转码机ip地址
+    uuid : 18位全球唯一id
+    ip   : 转码机ip地址
 #### 示例
     http://10.221.193.196:5000/interface/video_uuid_get
 
@@ -18,11 +20,9 @@ x100speed_transcode 接口文档
     uuid   : 视频唯一标识
     status : 视频转码状态，分别为success、failed、proceed
 #### 返回值
+    json格式返回操作状态以及失败原因
     status  : success、failed
     message : 失败原因
-    示例
-        {"status":"success", "message":""}
-        {"status":"failed",  "message":"uuid is empty"}
 #### 示例
     http://10.221.193.196:5000/interface/video_uuid_status_set?uuid=ytwQrjkUBWi0u0syEC&status=success
 
@@ -33,11 +33,24 @@ x100speed_transcode 接口文档
     uuid       : 视频唯一标识
     snap_count : 视频截图总数
 #### 返回值
+    json格式返回操作状态以及失败原因
     status  : success、failed
     message : 失败原因
-    示例
-        {"status":"success", "message":""}
-        {"status":"failed",  "message":"uuid is empty"}
+#### 示例
+    http://10.221.193.196:5000/interface//interface/video_uuid_snap_count_set?uuid=ytwQrjkUBWi0u0syEC&snap_count=100
+
+### /interface/video\_uuid\_bitrate\_add
+#### 描述
+    设置视频码率
+#### 参数
+    uuid    : 视频唯一标识
+    bitrate : 视频码率,可设置多个码率,用","分隔
+#### 返回值
+    json格式返回操作状态以及失败原因
+    status  : success、failed
+    message : 失败原因
+#### 示例
+    http://10.221.193.196:5000/interface/video_uuid_bitrate_add?uuid=ytE3V3GyJigi2sqeBK&bitrate=200,400
 
 ### /interface/video\_uuid\_segment\_add
 #### 描述
@@ -53,11 +66,9 @@ x100speed_transcode 接口文档
     frame_count  : 视频帧数
     file_size    : 切片文件大小
 #### 返回值
+    json格式返回操作状态以及失败原因
     status : success、failed
     message : 失败原因
-    示例
-        {"status":"success", "message":""}
-        {"status":"failed",  "message":"params error"}
 #### 示例
     http://10.221.193.196:5000/interface/video_uuid_segment_add?uuid=ytwQrjkUBWi0u0syEC&bitrate=200&fragment_id=1&hostname=http://x100speed.com&storage_path=/ZH/CN/ereoimdfmdnndfdkd_200_1.ts&create_time=1349827788&fps=25&frame_count=250&file_size=3430
 
