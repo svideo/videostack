@@ -13,6 +13,20 @@ x100speed_transcode 接口文档
 #### 示例
     http://10.221.193.196:5000/interface/video_uuid_get
 
+### /interface/video\_uuid\_info\_get
+#### 描述
+    获取uuid信息,包括状态、截图总数、转码机ip地址、码率
+#### 参数
+    uuid : 视频唯一标识
+#### 返回值
+    json格式返回uuid状态、截图总数、转码机ip、码率
+    status     : uuid状态,分别为success、failed、proceed
+    snap_count : 视频截图总数 
+    ip         : 转码机ip地址
+    bitrates   : uuid转码视频码率,支持多码率,用','分隔
+#### 示例
+    http://10.221.193.196:5000/interface/video_uuid_info_get?uuid=ytE3V3GyJigi2sqeBK
+
 ### /interface/video\_uuid\_status\_set
 #### 描述
     设置视频转码状态

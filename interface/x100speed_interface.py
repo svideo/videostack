@@ -26,6 +26,32 @@ def video_uuid_get():
     response.data = infor
     return response
 
+@app.route("/interface/video_uuid_info_get")
+def video_uuid_info_get():
+    uuid = request.args.get('uuid')
+
+    response  = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+
+    if not uuid:
+        response.data = '{"status":"failed", "message":"uuid params is empty"}'
+        return response
+
+    r   = redis_connect()
+    ret = r.hget("x100speed_hash_uuid", uuid)
+    if not ret:
+        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        return response
+
+    infor        = ret.decode()
+    string_split = infor.split('|')
+    value        = '{"status":"' + string_split[0] + '", "snap_count":"' + string_split[1]\
+                    + '", "ip":"' + string_split[2] + '", "bitrates":"' + string_split[3] + '"}'
+
+    response.data = value
+    return response
+
 @app.route("/interface/video_uuid_status_set")
 def video_uuid_status_set():
     uuid   = request.args.get('uuid')
