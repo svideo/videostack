@@ -33,7 +33,6 @@
 	        </form>
 		    <progress value="0" min="0" max="100" id="uploadprogress"></progress>
 		  </div>
-		<input class="btn btn-default" type="button" value="test" id="m3u8_play_addr">
 
 		  <div class="row">
 			  <div class="col-xs-12 myimg" >
@@ -46,13 +45,13 @@
           </div>
 
 		  <div style="display:none">
-		    <img class="progress_img img-responsive" style="float:left;max-width:50px" src="">
+		    <img class="progress_img img-responsive" style="float:left;max-width:80px;position:relative" src="">
 		  </div>
 
 		  <div style="display:none" id="show_play_link">
 			  <div class="row">
 				  <div class="col-offset-xs-4 col-xs-8">
-					播放地址: <a id="play_link" href="#"></a>
+					播放地址: <a id="m3u8_url" href="#"></a>
 				  </div>
 			  </div> <!-- row -->
 		  </div>
@@ -65,25 +64,29 @@
 <script src="/js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
 	function upload_start() {
-		//img_interval_id = setInterval(new_snap, 1000);
+		img_interval_id = setInterval(new_snap, 1500);
+		player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
 		get_video_id();
 	}
 
 	function new_snap() {
-		$.get("img.txt", function(data){
+		var snap_url_api = "http://10.221.193.196:5000/interface/video_uuid_new_image_get?uuid=" + video_id
+		$.get(snap_url_api, function(data){
 				console.log(data);
-				if(data!="") {
-				  if (img_count >= 14) {
+				if(data!="" && data.image_url != last_snap) {
+				  last_snap = data.image_url;
+				  if (img_count >= 8) {
 					$(".progress_img:first").remove();
 				  }
 				  var new_img_node = $(".progress_img:first").clone();
-				  $(new_img_node).attr("src", data);
+				  $(new_img_node).attr("src", data.image_url);
 				  $(new_img_node).hide();
 				  $(".myimg").append($(new_img_node));
-				  $(new_img_node).fadeIn("slow");
+				  //$(new_img_node).fadeIn("slow");
+				  $(new_img_node).animate({right: '+100px', opacity: 'show'}, "slow");
 				  img_count += 1;
 				}
-			});
+			}, "json");
 	}
 	
 	function update_progress(e) {
@@ -98,16 +101,6 @@
 		} 
 	}
 
-	$('#m3u8_play_addr').click(get_m3u8)
-	function get_m3u8() {
-		//alert("test");
-		var rand = Math.random();
-		var m3u8_url = 'http://www.x100speed.com/' + rand + '.m3u8';
-		$('#play_link').attr("href", m3u8_url);
-		$('#play_link').html(m3u8_url);
-		$('#show_play_link').show()
-	}
-
 	function get_video_id() {
 		$.ajax({
 			url: 'http://10.221.193.196:5000/interface/video_uuid_get',
@@ -117,6 +110,23 @@
 				video_id = data.uuid
 				console.log(data.uuid);
 				upload_file();
+			}
+		});
+	}
+
+	function get_m3u8_content() {
+		var m3u8_url = m3u8_hostname + '/interface/' + video_id + '.m3u8';
+		var player_url = player_hostname + '/' + 'player.html?m3u8_url=' + m3u8_url
+		$.ajax({
+			url: '',
+			type: "GET",
+			success: function (data) {
+				if (data != "") {
+					$('#m3u8_url').attr("href", player_url);
+					$('#m3u8_url').html(m3u8_url);
+					$('#show_play_link').show();
+					clearInterval(player_m3u8_interval_id);
+				}
 			}
 		});
 	}
@@ -165,7 +175,11 @@
 
 	var img_count = 0;
 	var img_interval_id;
-	var video_id = undefined;
+	var video_id  = undefined;
+	var last_snap = undefined; 
+	var player_hostname = 'http://10.221.193.196:5000';
+	var m3u8_hostname = 'http://10.221.193.196:5000';
+	var player_m3u8_interval_id;
 	$(document).ready(function(){ 
 			});
 </script>
