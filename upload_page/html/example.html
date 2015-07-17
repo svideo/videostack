@@ -33,6 +33,7 @@
 	        </form>
 		    <progress value="0" min="0" max="100" id="uploadprogress"></progress>
 		  </div>
+		<input class="btn btn-default" type="button" value="test" id="m3u8_play_addr">
 
 		  <div class="row">
 			  <div class="col-xs-12 myimg" >
@@ -47,6 +48,14 @@
 		  <div style="display:none">
 		    <img class="progress_img img-responsive" style="float:left;max-width:50px" src="">
 		  </div>
+
+		  <div style="display:none" id="show_play_link">
+			  <div class="row">
+				  <div class="col-offset-xs-4 col-xs-8">
+					播放地址: <a id="play_link" href="#"></a>
+				  </div>
+			  </div> <!-- row -->
+		  </div>
         </div>
       </div>
     </div>
@@ -55,6 +64,11 @@
 
 <script src="/js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
+	function upload_start() {
+		//img_interval_id = setInterval(new_snap, 1000);
+		get_video_id();
+	}
+
 	function new_snap() {
 		$.get("img.txt", function(data){
 				console.log(data);
@@ -72,30 +86,39 @@
 			});
 	}
 	
-	function upload_start() {
-		//img_interval_id = setInterval(new_snap, 1000);
-		get_video_id();
-	}
-
 	function update_progress(e) {
 		if(e.lengthComputable) {
 			var max = e.total;
 			var current = e.loaded;
 
 			var percent = (current / max * 100 | 0);
-			if (percent <= 99) {
+			if (percent < 100) {
 				$('#uploadprogress').attr("value", percent);
 			}
 		} 
 	}
 
+	$('#m3u8_play_addr').click(get_m3u8)
+	function get_m3u8() {
+		//alert("test");
+		var rand = Math.random();
+		var m3u8_url = 'http://www.x100speed.com/' + rand + '.m3u8';
+		$('#play_link').attr("href", m3u8_url);
+		$('#play_link').html(m3u8_url);
+		$('#show_play_link').show()
+	}
+
 	function get_video_id() {
-		//$.get("http://10.221.193.196:5000/getvideomaxid", function(data){
-		//		video_id = data;
-		//		upload_file();
-		//	});
-		video_id = 100000;
-		upload_file();
+		$.ajax({
+			url: 'http://10.221.193.196:5000/interface/video_uuid_get',
+			type: "GET",
+			dataType: "json",
+			success: function (data) {
+				video_id = data.uuid
+				console.log(data.uuid);
+				upload_file();
+			}
+		});
 	}
 
 	function success_upload(e) {

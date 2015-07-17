@@ -9,25 +9,35 @@ import subprocess
 import io
 import time
 import redis
-import signal
 import shutil
 from logging import warning, info, debug
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK
+import urllib.request
 
 class Transcoder:
     def __init__(self):
         self.config = self.read_conf()
-        #signal.signal(signal.SIGCHLD, self.child_pid_reap())
 
     def handle_body(self, name, body):
         if name == b'video_id':
             uuid = body.decode().rstrip()
-            self.uuid = "b1946ac92492d2347c6235b4d2611184"
-            self.segment_list_name = 'x100_list_' + uuid + '_' + '400'
+            print("===============")
+            #self.uuid = "b1946ac92492d2347c6235b4d2611184"
+            print(uuid)
+            self.uuid = uuid
+            print("===============")
             self.init_popen_handler()
+            self.video_status_set2remote()
+            self.video_bitrate_add2remote()
         elif(name == b'upload'):
             self.run_cmd_async(body)
+
+    def video_status_set2remote(self):
+        url = 'http://10.221.193.196:5000/interface/video_uuid_status_set'
+        #http://10.221.193.196:5000/interface/video_uuid_bitrate_add?uuid=ytE3V3GyJigi2sqeBK&bitrate=20
+        info = 'status=process' + '&uuid=' + self.uuid
+        self.http_request(url, info)
 
     def read_conf(self):
         configfile = 'conf/transcoder.conf'
@@ -80,6 +90,13 @@ class Transcoder:
         fcntl(self.stdout, F_SETFL, flags | O_NONBLOCK)
         return
 
+    def video_bitrate_add2remote(self):
+        url = 'http://10.221.193.196:5000/interface/video_uuid_bitrate_add'
+        #http://10.221.193.196:5000/interface/video_uuid_bitrate_add?uuid=ytE3V3GyJigi2sqeBK&bitrate=20
+        bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
+        info = 'bitrate=' + str(bitrate) + '&uuid=' + self.uuid
+        self.http_request(url, info)
+
     def run_cmd_async(self, body):
         self.stdin.write(body)
         while True:
@@ -93,14 +110,25 @@ class Transcoder:
                 ts_file = ts_re.group(1)
                 ts_filename = ts_file.split('/')[-1]
                 file_index = ts_re.group(2)
-                (target_file, request_file) = self.target_file(ts_filename,'ts')
+                (target_file, storage_path) = self.target_file(ts_filename,'ts')
                 shutil.move(ts_file, target_file)
                 create_time = self.file_create_time(target_file)
                 filesize = self.file_size(target_file)
-                video_info = self.uuid + '|' + self.config['base']['hostname'] + '|' + request_file + '|' + create_time + '|' \
-                    + self.config['segment']['fps'] + '|' + self.config['segment']['fps_count'] + file_index
-                #callback_api()
-                print(video_info)
+                bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
+
+                info  = 'uuid=' + self.uuid
+                info += '&hostname=' + self.config['base']['hostname']
+                info += '&storage_path=' + storage_path
+                info += '&frame_count=' + self.config['segment']['fps_count']
+                info += '&file_size=' + str(filesize)
+                info += '&fragment_id=' + file_index
+                info += '&bitrate=' + str(bitrate)
+                info += '&fps=' + self.config['segment']['fps']
+                info += '&create_time=' + create_time
+
+                #print(info)
+                url = 'http://10.221.193.196:5000/interface/video_uuid_segment_add'
+                self.http_request(url, info)
 
             snap_re = re.search("snap:\'(.*?)\'\s+count:(\d+).*", line)
             if snap_re:
@@ -110,9 +138,24 @@ class Transcoder:
                 (target_file, request_file) = self.target_file(snap_img_filename, 'snap')
                 #print(target_file)
                 shutil.move(snap_img_file, target_file)
-                print("snap info path %s count %s" % (target_file, snap_index))
-                #callback_api()
+                url = 'http://10.221.193.196:5000/interface/video_uuid_snap_count_set'
+                info = 'uuid=' + self.uuid +  '&snap_count=' + snap_index
+                print(info)
+                self.http_request(url, info)
         return
+
+    def init_request_info(self, **args):
+        info = ""
+        for key, value in args.items():
+            info += str(key) + '=' + str(value) + '&'
+        return info
+
+    def http_request(self, url, args):
+        request_url = url + '?' + args
+        print(request_url)
+        request = urllib.request.Request(request_url)
+        with urllib.request.urlopen(request) as f:
+            print(f.read().decode('utf-8'))
 
     def file_create_time(self, afile):
         if not os.path.exists(afile):
@@ -137,9 +180,9 @@ class Transcoder:
         target_snap_name = storage_dir + '/' + self.uuid + "_%06d.jpg"
         cmd = ""
         cmd += "ffmpeg -v verbose -i - -map 0 -dn"
-        cmd += " -c:v libx264 -profile:v main -b:v " + self.config['segment']['vbitrate'] + " -preset fast -s 86x48 "
+        cmd += " -c:v libx264 -profile:v main -b:v " + self.config['segment']['vbitrate'] + 'k' + " -preset fast -s 86x48 "
         cmd += " -pix_fmt yuv420p"
-        cmd += " -c:a libfaac -b:a " + self.config['segment']['abitrate'] + " -ar 32000 -ac 2"
+        cmd += " -c:a libfaac -b:a " + self.config['segment']['abitrate'] + 'k' + " -ar 32000 -ac 2"
         cmd += " -f segment -segment_format flv -segment_time 8"
         cmd += " -y " + target_ts_name
         cmd += " -r 1 -s 86x48 -y " + target_snap_name + " 2>&1"
@@ -170,22 +213,6 @@ class Transcoder:
         info("delete redis ok")
         return 1
 
-    #def child_pid_reap(self):
-    #    result = 0
-    #    while True:
-    #        try:
-    #            result = os.waitpid(-1, os.WNOHANG)
-    #        except:
-    #            warning("waitpid error")
-    #        print("repead child process %d" % result[0])
-    #    signal.signal(signal.SIGCHLD, self.child_pid_reap())
-
-    #def fork_redis(self, segment_count, segment_info):
-    #    pid = os.fork()
-    #    if pid == 0:
-    #        if self.insert_redis(segment_count, segment_info):
-    #            sys.exit(0)
-    #    return
 
     def __del__(self):
         self.stdin.close()

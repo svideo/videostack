@@ -73,7 +73,7 @@ class MyServer(BaseHTTPRequestHandler):
         buf = ''
 
         while content_length > 0:
-            want_byte = 40960
+            want_byte = 4096
             if content_length > want_byte:
                 buf = self.rfile.read(want_byte)
             else:
