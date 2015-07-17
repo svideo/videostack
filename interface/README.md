@@ -31,8 +31,9 @@ x100speed_transcode 接口文档
 #### 描述
     设置视频转码状态
 #### 参数
-    uuid   : 视频唯一标识
-    status : 视频转码状态，分别为success、failed、proceed
+    uuid    : 视频唯一标识
+    status  : 视频转码状态，分别为success、failed、proceed, 设置为proceed时需要加上bitrate参数
+    bitrate : 转码视频码率, status为proceed时传入此参数，其他状态不需要
 #### 返回值
     json格式返回操作状态以及失败原因
     status  : success、failed
@@ -51,20 +52,20 @@ x100speed_transcode 接口文档
     status  : success、failed
     message : 失败原因
 #### 示例
-    http://10.221.193.196:5000/interface//interface/video_uuid_snap_count_set?uuid=ytwQrjkUBWi0u0syEC&snap_count=100
+    http://10.221.193.196:5000/interface/video_uuid_snap_count_set?uuid=ytwQrjkUBWi0u0syEC&snap_count=100
 
-### /interface/video\_uuid\_bitrate\_add
+### /interface/video\_uuid\_new\_image\_get
 #### 描述
-    设置视频码率
+    获取uuid视频最新截图地址
 #### 参数
-    uuid    : 视频唯一标识
-    bitrate : 视频码率,可设置多个码率,用","分隔
+    uuid : 视频唯一标识
 #### 返回值
-    json格式返回操作状态以及失败原因
-    status  : success、failed
-    message : 失败原因
+    json格式返回截图地址以及操作状态、失败原因
+    status    : success、failed
+    message   : 失败原因
+    image_url : 截图地址 
 #### 示例
-    http://10.221.193.196:5000/interface/video_uuid_bitrate_add?uuid=ytE3V3GyJigi2sqeBK&bitrate=200,400
+    http://10.221.193.196:5000/interface/video_uuid_new_image_get?uuid=ytE3V3GyJigi2sqeBK
 
 ### /interface/video\_uuid\_segment\_add
 #### 描述

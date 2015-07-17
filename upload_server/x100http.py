@@ -104,7 +104,6 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 self.__class__.routers_upload[
                     file_path_without_query_string]['fn_init'](req)
             except:
-                print(12312312)
                 self.send_error(500)
                 return
 

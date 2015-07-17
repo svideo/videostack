@@ -1,5 +1,5 @@
 from flask import Flask,request,make_response
-import time,redis,x100idgen
+import time,redis,x100idgen,hashlib
 
 app = Flask(__name__)
 
@@ -16,12 +16,8 @@ def video_uuid_get():
     hash_string = ip + userAgent + str(millisecond)
     idgen       = x100idgen.IdGen()
     uuid        = idgen.gen_id(hash_string)
-    ip          = "10.221.193.196"
+    ip          = "www.x100speed.com"
 
-    r     = redis_connect()
-    value = '|' + '|' + ip + '|' 
-    ret   = r.hset("x100speed_hash_uuid", uuid, value)
-    
     infor = '{"uuid":"' + uuid + '","ip":"' + ip + '"}'
     response.data = infor
     return response
@@ -56,6 +52,7 @@ def video_uuid_info_get():
 def video_uuid_status_set():
     uuid   = request.args.get('uuid')
     status = request.args.get('status')
+    ip     = request.remote_addr
 
     response  = make_response()
     response.headers['Access-Control-Allow-Methods'] = 'GET'
@@ -69,7 +66,16 @@ def video_uuid_status_set():
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
-        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        if status == "proceed":
+            bitrate = request.args.get('bitrate')
+            if not bitrate:
+                response.data = '{"status":"failed", "message":"proceed first bitrate params is empty"}'
+                return response
+            value = status + '|' + '|' + ip + '|' + bitrate
+            r.hset('x100speed_hash_uuid', uuid, value)
+            response.data = '{"status":"success", "message":""}'
+        else:
+            response.data = '{"status":"failed", "message":"redis not have uuid"}'
         return response
      
     infor        = ret.decode()
@@ -78,12 +84,48 @@ def video_uuid_status_set():
     for index, item in enumerate(string_split):
         if index == 0:
             continue
-        value += '|' + item
+        elif index == 2:
+            value += '|' + ip
+        elif index == 3 and status == "proceed":
+            bitrate = request.args.get('bitrate')
+            if not bitrate:
+                response.data = '{"status":"failed", "message":"bitrate params is empty"}'
+                return response
+
+            ret = video_uuid_bitrate_add(uuid, bitrate)
+            if ret:
+                value += '|' + ret
+            else:
+                value += '|' + bitrate
+        else:
+            value += '|' + item
 
     r.hset('x100speed_hash_uuid', uuid, value)
 
     response.data = '{"status":"success", "message":""}'
     return response
+
+def video_uuid_bitrate_add(uuid, bitrate):
+    if not uuid or not bitrate:
+        return ""
+
+    value = ''
+    r     = redis_connect()
+    ret   = r.hget("x100speed_hash_uuid", uuid)
+    if not ret:
+        return ""
+    
+    infor            = ret.decode()
+    string_split     = infor.split('|')
+    string_split_len = len(string_split)
+
+    bitrates = string_split[3].split(',')
+    bitrates.append(str(bitrate))
+    bitrates = list(set(bitrates))
+    bitrates.sort(key = int)
+    value = ',' . join(bitrates)
+    
+    return value
 
 @app.route("/interface/video_uuid_snap_count_set")
 def video_uuid_snap_count_set():
@@ -122,50 +164,36 @@ def video_uuid_snap_count_set():
     response.data = '{"status":"success", "message":""}'
     return response
 
-@app.route("/interface/video_uuid_bitrate_add")
-def video_uuid_bitrate_add():
-    uuid    = request.args.get('uuid')
-    bitrate = request.args.get('bitrate')
-
-    response = make_response()
+@app.route("/interface/video_uuid_new_image_get")
+def video_uuid_new_image_get():
+    uuid = request.args.get('uuid')
+    
+    response  = make_response()
     response.headers['Access-Control-Allow-Methods'] = 'GET'
     response.headers['Access-Control-Allow-Origin'] = '*'
     
-    if not uuid or not bitrate:
-        response.data = '{"status":"failed", "message":"uuid or bitrate params is empty"}'
+    if not uuid:
+        response.data = '{"status":"failed", "message":"uuid params is empty"}'
         return response
-
-    value = ''
+    
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
         response.data = '{"status":"failed", "message":"redis not have uuid"}'
-        return response
-    
-    infor            = ret.decode()
-    string_split     = infor.split('|')
-    string_split_len = len(string_split)
+        return response    
 
-    for index, item in enumerate(string_split):
-        if index == 0:
-            value += item
-        elif index == 3:
-            if not item:
-                value += '|' + bitrate
-            else:
-                bitrates = item.split(',')
-                bitrates_list = bitrate.split(',')
-                for bitrate_string in bitrates_list:
-                    bitrates.append(bitrate_string)
-                bitrates = list(set(bitrates))
-                bitrates.sort(key = int)
-                value += '|' + ',' . join(bitrates)
-        else:
-            value += '|' + item
+    infor         = ret.decode()
+    string_split  = infor.split('|')
+    snap_count    = string_split[1]
+    ip            = string_split[2]
+    source_string = uuid + '_' + snap_count
+    string_hash   = hashlib.new("md5", source_string.encode()).hexdigest()
+    dir_first     = string_hash[:3]
+    dir_second    = string_hash[3:6]
+    dir_third     = string_hash[6:9]
+    image_url     = 'http://' + ip + '/' + dir_first + '/' + dir_second + '/' + dir_third + '/' +  uuid + '_' + snap_count + '.jpg'
 
-    r.hset('x100speed_hash_uuid', uuid, value)
-
-    response.data = '{"status":"success", "message":""}'
+    response.data = '{"status":"success", "message":"", "image_url":"' + image_url + '"}'
     return response
 
 @app.route("/interface/video_uuid_segment_add")
@@ -189,17 +217,116 @@ def video_uuid_segment_add():
         response.data = '{"status":"failed", "message":"params have error"}'
         return response
     
-    sorted_set_key    = 'x100speed_sortedset_uuid_' + bitrate
+    sorted_set_key    = 'x100speed_sortedset_' + uuid + '_' + bitrate
     sorted_set_score  = create_time
     sorted_set_member = fragment_id + '|' + hostname + '|' + storage_path + '|' + create_time \
                         + '|' + fps + '|' + frame_count + '|' + file_size
     r   = redis_connect()
     ret = r.zadd(sorted_set_key, sorted_set_score, sorted_set_member)
-    print(ret)
 
     response.data = '{"status":"success", "message":""}'
     return response
 
+@app.route("/interface/<play_url>.m3u8")
+def video_uuid_play(play_url):
+    uuid = play_url
+
+    response = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Content-Type'] = 'application/vnd.apple.mpegurl'
+
+    r   = redis_connect()
+    ret = r.hget('x100speed_hash_uuid', uuid)
+    if not ret:
+        response.data = ""
+        return response
+
+    uuid_info      = ret.decode()
+    uuid_info_list = uuid_info.split('|')
+    play_type      = "live"
+    if uuid_info_list[0] == "success":
+        play_type = "vod"
+    elif uuid_info_list[0] == "failed":
+        response.data = ""
+        return response
+
+    ip            = uuid_info_list[2]
+    bitrates      = uuid_info_list[3]
+    bitrates_list = bitrates.split(',')
+    
+    m3u8_value = '#EXTM3U\n'
+    for bitrate in bitrates_list:
+        total_bitrate = int(bitrate) * 1024
+        m3u8_value   += '#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=' + str(total_bitrate) + '\n'
+        #m3u8_value   += 'http://' + ip + '/' + uuid + '_' + bitrate + '.m3u8\n'
+        m3u8_value   += 'http://10.221.193.196:5000/interface/' + uuid + '_' + bitrate + '.m3u8\n'
+
+    response.data = m3u8_value
+    return response
+
+@app.route("/interface/<play_url>_<int:play_bitrate>.m3u8")
+def video_uuid_play_child(play_url, play_bitrate):
+    uuid    = play_url
+    bitrate = play_bitrate
+
+    response = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Content-Type'] = 'application/vnd.apple.mpegurl'
+
+    r   = redis_connect()
+    ret = r.hget('x100speed_hash_uuid', uuid)
+    if not ret:
+        response.data = ""
+        return response
+
+    uuid_info      = ret.decode()
+    uuid_info_list = uuid_info.split('|')
+    play_type      = "live"
+    if uuid_info_list[0] == "success":
+        play_type = "vod"
+    elif uuid_info_list[0] == "failed":
+        response.data = ""
+        return response
+
+    uuid_sortedset = 'x100speed_sortedset_' + uuid + '_' + str(bitrate)
+    fragment_list  = r.zrange(uuid_sortedset, -3, -1)
+    if not fragment_list:
+        response.data = ""
+        return response
+
+    uuid_m3u8             = ""
+    uuid_m3u8_tmp         = ""
+    uuid_m3u8_sequence    = ""
+    max_fragment_duration = 0.000
+    
+    for fragment in fragment_list:
+        fragment_string = fragment.decode()
+        fragment_array  = fragment_string.split('|')
+        
+        if not uuid_m3u8_sequence:
+            uuid_m3u8_sequence = str(fragment_array[0])
+ 
+        fragment_duration = round(int(fragment_array[5]) / int(fragment_array[4]), 3)
+        if fragment_duration > max_fragment_duration:
+            max_fragment_duration = fragment_duration
+
+        fragment_url  = fragment_array[1] + fragment_array[2]
+        uuid_m3u8_tmp += '#EXTINF:' + str(fragment_duration)
+        uuid_m3u8_tmp += "\n"
+        uuid_m3u8_tmp += fragment_url
+        uuid_m3u8_tmp += "\n"
+    
+    uuid_m3u8 += "#EXTM3U\n"
+    uuid_m3u8 += "#EXT-X-VERSION:5\n"
+    uuid_m3u8 += "#EXT-X-TARGETDURATION:" + str(max_fragment_duration) + "\n"
+    uuid_m3u8 += "#EXT-X-MEDIA-SEQUENCE:" + uuid_m3u8_sequence + "\n"
+    uuid_m3u8 += "#EXT-X-ALLOW-CACHE:YES\n"
+    uuid_m3u8 += uuid_m3u8_tmp
+
+    response.data = uuid_m3u8
+    return response
 
 def redis_connect():
     host='127.0.0.1'
@@ -212,4 +339,4 @@ def redis_connect():
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5000)
