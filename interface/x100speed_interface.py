@@ -13,11 +13,17 @@ def video_uuid_get():
     response.headers['Access-Control-Allow-Methods'] = 'GET'
     response.headers['Access-Control-Allow-Origin'] = '*'
     
-    hash_string = ip + userAgent + millisecond
+    hash_string = ip + userAgent + str(millisecond)
     idgen       = x100idgen.IdGen()
     uuid        = idgen.gen_id(hash_string)
+    ip          = "10.221.193.196"
+
+    r     = redis_connect()
+    value = '|' + '|' + ip + '|' 
+    ret   = r.hset("x100speed_hash_uuid", uuid, value)
     
-    response.data = uuid
+    infor = '{"uuid":"' + uuid + '","ip":"' + ip + '"}'
+    response.data = infor
     return response
 
 @app.route("/interface/video_uuid_status_set")
@@ -30,19 +36,23 @@ def video_uuid_status_set():
     response.headers['Access-Control-Allow-Origin'] = '*'
     
     if not uuid or not status:
-        response.data = '{"status":"failed", "message":"uuid or status is empty"}'
+        response.data = '{"status":"failed", "message":"uuid or status params is empty"}'
         return response
 
     value = ''
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
-        value = status + '|'
-    else: 
-        infor        = ret.decode()
-        string_split = infor.split('|')
-        print(string_split)
-        value = status + '|' + string_split[1]
+        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        return response
+     
+    infor        = ret.decode()
+    string_split = infor.split('|')
+    value        = status
+    for index, item in enumerate(string_split):
+        if index == 0:
+            continue
+        value += '|' + item
 
     r.hset('x100speed_hash_uuid', uuid, value)
 
@@ -59,18 +69,73 @@ def video_uuid_snap_count_set():
     response.headers['Access-Control-Allow-Origin'] = '*'
     
     if not uuid or not snap_count:
-        response.data = '{"status":"failed", "message":"uuid or snap_count is empty"}'
+        response.data = '{"status":"failed", "message":"uuid or snap_count params is empty"}'
         return response
 
     value = ''
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
-        value = '|' + snap_count
-    else:
-        infor        = ret.decode()
-        string_split = infor.split('|')
-        value        = string_split[0] + '|' + snap_count
+        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        return response
+    
+    infor            = ret.decode()
+    string_split     = infor.split('|')
+    string_split_len = len(string_split)
+
+    for index, item in enumerate(string_split):
+        if index == 0:
+            value += item
+        elif index == 1:
+            value += '|' + snap_count
+        else :
+           value += '|' + item
+
+    r.hset('x100speed_hash_uuid', uuid, value)
+
+    response.data = '{"status":"success", "message":""}'
+    return response
+
+@app.route("/interface/video_uuid_bitrate_add")
+def video_uuid_bitrate_add():
+    uuid    = request.args.get('uuid')
+    bitrate = request.args.get('bitrate')
+
+    response = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    
+    if not uuid or not bitrate:
+        response.data = '{"status":"failed", "message":"uuid or bitrate params is empty"}'
+        return response
+
+    value = ''
+    r     = redis_connect()
+    ret   = r.hget("x100speed_hash_uuid", uuid)
+    if not ret:
+        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        return response
+    
+    infor            = ret.decode()
+    string_split     = infor.split('|')
+    string_split_len = len(string_split)
+
+    for index, item in enumerate(string_split):
+        if index == 0:
+            value += item
+        elif index == 3:
+            if not item:
+                value += '|' + bitrate
+            else:
+                bitrates = item.split(',')
+                bitrates_list = bitrate.split(',')
+                for bitrate_string in bitrates_list:
+                    bitrates.append(bitrate_string)
+                bitrates = list(set(bitrates))
+                bitrates.sort(key = int)
+                value += '|' + ',' . join(bitrates)
+        else:
+            value += '|' + item
 
     r.hset('x100speed_hash_uuid', uuid, value)
 
