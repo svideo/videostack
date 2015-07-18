@@ -39,6 +39,7 @@ def upload_test_ing(key, body):
 def upload_test_del(req):
     return req['remote_ip']
 
+app.set_upload_buf_size(8192)
 app.get("/get", get_test)
 app.post("/post", post_test)
 app.upload("/upload", upload_test_init, upload_test_ing, upload_test_del)
