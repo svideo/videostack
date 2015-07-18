@@ -1,5 +1,5 @@
 from flask import Flask,request,make_response
-import time,redis,x100idgen
+import time,redis,x100idgen,hashlib
 
 app = Flask(__name__)
 
@@ -18,9 +18,9 @@ def video_uuid_get():
     uuid        = idgen.gen_id(hash_string)
     ip          = "10.221.193.196"
 
-    r     = redis_connect()
-    value = '|' + '|' + ip + '|' 
-    ret   = r.hset("x100speed_hash_uuid", uuid, value)
+    #r     = redis_connect()
+    #value = '|' + '|' + ip + '|' 
+    #ret   = r.hset("x100speed_hash_uuid", uuid, value)
     
     infor = '{"uuid":"' + uuid + '","ip":"' + ip + '"}'
     response.data = infor
@@ -56,6 +56,7 @@ def video_uuid_info_get():
 def video_uuid_status_set():
     uuid   = request.args.get('uuid')
     status = request.args.get('status')
+    ip     = request.remote_addr
 
     response  = make_response()
     response.headers['Access-Control-Allow-Methods'] = 'GET'
@@ -69,7 +70,16 @@ def video_uuid_status_set():
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
-        response.data = '{"status":"failed", "message":"redis not have uuid"}'
+        if status == "proceed":
+            bitrate = request.args.get('bitrate')
+            if not bitrate:
+                response.data = '{"status":"failed", "message":"proceed first bitrate params is empty"}'
+                return response
+            value = status + '|' + '|' + ip + '|' + bitrate
+            r.hset('x100speed_hash_uuid', uuid, value)
+            response.data = '{"status":"success", "message":""}'
+        else:
+            response.data = '{"status":"failed", "message":"redis not have uuid"}'
         return response
      
     infor        = ret.decode()
@@ -78,12 +88,48 @@ def video_uuid_status_set():
     for index, item in enumerate(string_split):
         if index == 0:
             continue
-        value += '|' + item
+        elif index == 2:
+            value += '|' + ip
+        elif index == 3 and status == "proceed":
+            bitrate = request.args.get('bitrate')
+            if not bitrate:
+                response.data = '{"status":"failed", "message":"bitrate params is empty"}'
+                return response
+
+            ret = video_uuid_bitrate_add(uuid, bitrate)
+            if ret:
+                value += '|' + ret
+            else:
+                value += '|' + bitrate
+        else:
+            value += '|' + item
 
     r.hset('x100speed_hash_uuid', uuid, value)
 
     response.data = '{"status":"success", "message":""}'
     return response
+
+def video_uuid_bitrate_add(uuid, bitrate):
+    if not uuid or not bitrate:
+        return ""
+
+    value = ''
+    r     = redis_connect()
+    ret   = r.hget("x100speed_hash_uuid", uuid)
+    if not ret:
+        return ""
+    
+    infor            = ret.decode()
+    string_split     = infor.split('|')
+    string_split_len = len(string_split)
+
+    bitrates = string_split[3].split(',')
+    bitrates.append(str(bitrate))
+    bitrates = list(set(bitrates))
+    bitrates.sort(key = int)
+    value = ',' . join(bitrates)
+    
+    return value
 
 @app.route("/interface/video_uuid_snap_count_set")
 def video_uuid_snap_count_set():
@@ -122,51 +168,38 @@ def video_uuid_snap_count_set():
     response.data = '{"status":"success", "message":""}'
     return response
 
-@app.route("/interface/video_uuid_bitrate_add")
-def video_uuid_bitrate_add():
-    uuid    = request.args.get('uuid')
-    bitrate = request.args.get('bitrate')
-
-    response = make_response()
+@app.route("/interface/video_uuid_new_image_get")
+def video_uuid_new_image_get():
+    uuid = request.args.get('uuid')
+    
+    response  = make_response()
     response.headers['Access-Control-Allow-Methods'] = 'GET'
     response.headers['Access-Control-Allow-Origin'] = '*'
     
-    if not uuid or not bitrate:
-        response.data = '{"status":"failed", "message":"uuid or bitrate params is empty"}'
+    if not uuid:
+        response.data = '{"status":"failed", "message":"uuid params is empty"}'
         return response
-
-    value = ''
+    
     r     = redis_connect()
     ret   = r.hget("x100speed_hash_uuid", uuid)
     if not ret:
         response.data = '{"status":"failed", "message":"redis not have uuid"}'
-        return response
-    
-    infor            = ret.decode()
-    string_split     = infor.split('|')
-    string_split_len = len(string_split)
+        return response    
 
-    for index, item in enumerate(string_split):
-        if index == 0:
-            value += item
-        elif index == 3:
-            if not item:
-                value += '|' + bitrate
-            else:
-                bitrates = item.split(',')
-                bitrates_list = bitrate.split(',')
-                for bitrate_string in bitrates_list:
-                    bitrates.append(bitrate_string)
-                bitrates = list(set(bitrates))
-                bitrates.sort(key = int)
-                value += '|' + ',' . join(bitrates)
-        else:
-            value += '|' + item
+    infor         = ret.decode()
+    string_split  = infor.split('|')
+    snap_count    = string_split[1]
+    ip            = string_split[2]
+    source_string = uuid + '_' + snap_count
+    string_hash   = hashlib.new("md5", source_string.encode()).hexdigest()
+    dir_first     = string_hash[:3]
+    dir_second    = string_hash[3:6]
+    dir_third     = string_hash[6:9]
+    image_url     = 'http://' + ip + '/' + dir_first + '/' + dir_second + '/' + dir_third + '/' +  uuid + '_' + snap_count + '.jpg'
 
-    r.hset('x100speed_hash_uuid', uuid, value)
-
-    response.data = '{"status":"success", "message":""}'
+    response.data = '{"status":"success", "message":"", "image_url":"' + image_url + '"}'
     return response
+
 
 @app.route("/interface/video_uuid_segment_add")
 def video_uuid_segment_add():
@@ -195,7 +228,6 @@ def video_uuid_segment_add():
                         + '|' + fps + '|' + frame_count + '|' + file_size
     r   = redis_connect()
     ret = r.zadd(sorted_set_key, sorted_set_score, sorted_set_member)
-    print(ret)
 
     response.data = '{"status":"success", "message":""}'
     return response
