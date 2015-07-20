@@ -112,12 +112,15 @@ class Transcoder:
 
         tmp_ts_name = storage_dir + '/' + self.uuid + "_%d.flv"
         tmp_snap_name = storage_dir + '/' + self.uuid + "_%d.jpg"
+        vbitrate = self.config['segment']['vbitrate']
+        abitrate = self.config['segment']['abitrate']
+        segment_time = self.config['segment']['time']
         cmd = ""
         cmd += "ffmpeg -v verbose -i - -map 0 -dn"
-        cmd += " -c:v copy -b:v " + self.config['segment']['vbitrate'] + 'k' + " -preset fast -s 86x48 "
+        cmd += " -c:v copy -b:v " + vbitrate + 'k' + " -preset fast -s 86x48 "
         cmd += " -pix_fmt yuv420p"
-        cmd += " -c:a libfaac -b:a " + self.config['segment']['abitrate'] + 'k' + " -ar 32000 -ac 2"
-        cmd += " -bsf:v h264_mp4toannexb -f segment -segment_format mpegts -segment_time 8"
+        cmd += " -c:a libfaac -b:a " + abitrate + 'k' + " -ar 32000 -ac 2"
+        cmd += " -bsf:v h264_mp4toannexb -f segment -segment_format mpegts -segment_time " + segment_time
         #-bsf:v h264_mp4toannexb -f segment -segment_format mpegts
         cmd += " -y " + tmp_ts_name
         cmd += " -r 0.5 -s 176x144 -y " + tmp_snap_name + " 2>&1"
