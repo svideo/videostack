@@ -3,6 +3,44 @@ import time,redis,x100idgen,hashlib
 
 app = Flask(__name__)
 
+@app.route("/interface/staff_ip_add")
+def staff_ip_add():
+    ip   = request.args.get('ip')
+    load = 100
+
+    response  = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+
+    if not ip:
+        response.data = '{"status":"failed", "message":"ip is null"}'
+        return response
+    
+    r = redis_connect()
+    r.hset('x100speed_hash_staff', ip, load)
+
+    response.data = '{"status":"success", "message":""}'
+    return response
+
+@app.route("/interface/staff_load_set")
+def staff_load_set():
+    ip   = request.args.get('ip')
+    load = request.args.get('load') 
+
+    response  = make_response()
+    response.headers['Access-Control-Allow-Methods'] = 'GET'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+
+    if not ip or not load:
+        response.data = '{"status":"failed", "message":"ip or load is null"}'
+        return response
+
+    r = redis_connect()
+    r.hset('x100speed_hash_staff', ip, load)
+
+    response.data = '{"status":"success", "message":""}'
+    return response
+    
 @app.route("/interface/video_uuid_get")
 def video_uuid_get():
     userAgent   = request.headers.get('User-Agent')
@@ -16,9 +54,22 @@ def video_uuid_get():
     hash_string = ip + userAgent + str(millisecond)
     idgen       = x100idgen.IdGen()
     uuid        = idgen.gen_id(hash_string)
-    ip          = "www.x100speed.com"
+    
+    r           = redis_connect()
+    staff_list  = r.hgetall('x100speed_hash_staff') 
+    
+    if not staff_list:
+        response.data = '{"status":"failed", "message":"staff ip empty"}'
+        return response
 
-    infor = '{"uuid":"' + uuid + '","ip":"' + ip + '"}'
+    idle_staff_list = {key: value for key, value in staff_list.items() if float(value) < 30}    
+    if not idle_staff_list:
+        response.data = '{"status":"failed", "message":"staff is busying"}'
+        return response
+    staff    = idle_staff_list.popitem()
+    staff_ip = staff[0].decode()
+
+    infor = '{"uuid":"' + uuid + '","ip":"' + staff_ip + '"}'
     response.data = infor
     return response
 
@@ -186,7 +237,7 @@ def video_uuid_new_image_get():
     string_split  = infor.split('|')
     snap_count    = string_split[1]
     ip            = string_split[2]
-    source_string = uuid + '_' + snap_count
+    source_string = uuid + '_' + snap_count + '.jpg'
     string_hash   = hashlib.new("md5", source_string.encode()).hexdigest()
     dir_first     = string_hash[:3]
     dir_second    = string_hash[3:6]
@@ -259,7 +310,6 @@ def video_uuid_play(play_url):
     for bitrate in bitrates_list:
         total_bitrate = int(bitrate) * 1024
         m3u8_value   += '#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=' + str(total_bitrate) + '\n'
-        #m3u8_value   += 'http://' + ip + '/' + uuid + '_' + bitrate + '.m3u8\n'
         m3u8_value   += 'http://10.221.193.196:5000/interface/' + uuid + '_' + bitrate + '.m3u8\n'
 
     response.data = m3u8_value
@@ -339,4 +389,4 @@ def redis_connect():
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=6000)
