@@ -5,9 +5,6 @@
 		<title>播放视频</title>
 		<link href="lib/bootstrap.min.css" rel="stylesheet">
 		<link href="css/x100speed.css" rel="stylesheet">
-		<script src="lib/jquery-2.1.4.min.js"></script>
-		<script src="lib/hls/shim/console.time.js"></script>
-		<script src="js/main.js"></script>
   </head>
 
 	<body>
@@ -30,9 +27,8 @@
         <div class="col-md-8 col-md-offset-2">
         <h1>播放视频</h1>
         <form class="form-inline" id="upload-form" action="">
-          <input id="inputUrlId" type="text" class="form-control input-lg" size="48" placeholder="输入m3u8地址" autofocus />
-          <input type="button" class="btn btn-default btn-lg" onclick="playUrl()" value="播放" />
-				  <input class="btn btn-default btn-lg" type="button" id="pause" value="暂停" />
+          <input id="play_url" type="text" class="form-control input-lg" size="48" placeholder="输入m3u8地址" autofocus />
+          <input type="button" class="btn btn-default btn-lg" id="play" value="播放" />
         </form>
         </div>
       </div>
@@ -41,15 +37,34 @@
     <div class="container" style="margin-top: 10px;">
       <div class="row">
         <div class="col-md-10 col-md-offset-1">
-						<div id="video-streaming">
-              <canvas id="canvas" width="640" height="360" style="background-color: #000;"></canvas>
-						</div>
-						<input class="btn btn-default btn-lg" type="button" id="play" value="播放" />
+          <canvas id="player_canvas" width="640" height="360" style="background-color: #000;"></canvas>
         </div>
       </div>
     </div>
 
-		<div id="browserJsId">
-		</div>
 	</body>
 </html>
+
+<script src="lib/jquery-1.11.3.min.js"></script>
+<script src="lib/x100toolkit.js"></script>
+<script type="text/javascript">
+function play_m3u8(m3u8_url) {
+  $("#play_url").val(m3u8_url);
+  $("#player_js").attr( { "src": "lib/hls/browser.js", "data-canvas": "player_canvas", "data-hls": m3u8_url} );
+}
+ 
+$("#play").click( function () {
+  var m3u8_url = $("#play_url").val();
+  play_m3u8(m3u8_url);
+});
+
+$(document).ready(function(){
+  var play_url = getUrlParameter('play_url');
+  if (play_url.substr(0, 7) == "http://" && play_url.substr(-4, 4) == "m3u8" ) {
+    play_m3u8(play_url);
+  }
+});
+</script>
+
+<!-- below script tag MUST be the last script tag !!! -->
+<script id="player_js"></script>
