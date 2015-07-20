@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>上传视频</title>
+  <link href="lib/bootstrap.min.css" rel="stylesheet">
+  <link href="css/x100speed.css" rel="stylesheet">
+</head>
+<body>
+  
+<div class="container">
+<nav class="navbar navbar-default navbar-fixed-top" style="border-top:2px solid #f06923;">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" style="color: #333; text-shadow: 0 1px 3px rgba(0,0,0,.5);" href="/"><em>x100Speed-Transcode</em></a>
+      </div>
+      <div id="navbar" class="navbar-collapse navbar-right">
+      <a class="navbar-brand" href="upload.html" style="color: #f06923;font-size: 16px">上传视频</a>
+      <a class="navbar-brand" href="play.html" style="font-size: 16px">播放视频</a>
+    </div>
+  </div>
+</nav>
+</div>
+
+<div class="container" style="margin-top: 200px;">
+<div class="row">
+  <div class="col-md-6 col-md-offset-3">
+    <h1>上传视频<h1>
+    <form class="form-inline" id="upload-form" action="" method="post" enctype="multipart/form-data">
+    <input type="file" class="form-control input-lg" name="upload" id="upload" />
+    <input type="submit" id="upload" class="btn btn-default btn-lg" value="上传" /> 
+    </form>
+    <progress value="0" min="0" max="100" id="uploadprogress"></progress>
+  </div>
+</div>
+</div>
+
+<div class="row">
+  <div class="col-xs-12 myimg" >
+  </div>
+</div>
+
+<div>
+  <img class="progress_img filmed" style="float:left;max-width:80px;position:relative;" src="">
+</div>
+
+</body>
+</html>
+
+<script src="lib/jquery-1.11.3.min.js"></script>
+<script type="text/javascript">
+function new_snap() {
+  var new_img_node = $(".progress_img:last").clone();
+  $(new_img_node).attr("src", "https://www.baidu.com/img/bdlogo.png?" + img_count);
+  $(new_img_node).css("left", "+30px");
+  $(new_img_node).hide();
+
+  if (img_count >= 14) {
+    $(".progress_img:first").remove();
+  }
+
+  $(".myimg").append($(new_img_node));
+  $(new_img_node).animate({"left": '0px', opacity: 'show'}, "slow");
+  img_count += 1;
+}
+
+function upload_start() {
+  //img_interval_id = setInterval(new_snap, 1000);
+  new_snap();
+}
+
+$("form").submit( function () {
+    upload_start();
+    return false;
+});
+
+var img_count = 0;
+var img_interval_id;
+
+$(document).ready(function(){ 
+});
+
+</script>

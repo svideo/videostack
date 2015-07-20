@@ -86,38 +86,39 @@ function uploadfile() {
   var formdata = new FormData();		
   formdata.append('upload', $('#upload')[0].files[0]);
   $.ajax({
-type: "POST",		
-url : "http://www.speed.com/action.php",
-data: formdata,
-xhr: function() {
-var myxhr = $.ajaxSettings.xhr();
-if(myxhr.upload){
-myxhr.upload.addEventListener('progress',update_progress, false);
-myxhr.upload.addEventListener('load', success_upload, false);
-}
-return myxhr;
-},
-cache: false,
-contentType: false,
-processData: false,
-success: function(data) {
-console.log("upload success");	
-},
-error: function(data) {
-console.log("upload error");			
-}
-});
-
-console.log("uploadfile");			
+    type: "POST",		
+    url : "http://www.speed.com/action.php",
+    data: formdata,
+    xhr: function() {
+    var myxhr = $.ajaxSettings.xhr();
+    if(myxhr.upload){
+    myxhr.upload.addEventListener('progress',update_progress, false);
+    myxhr.upload.addEventListener('load', success_upload, false);
+    }
+    return myxhr;
+    },
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: function(data) {
+    console.log("upload success");	
+    },
+    error: function(data) {
+    console.log("upload error");			
+    }
+  });
+  console.log("uploadfile");			
 }
 
 $("form").submit( function () {
     upload_start();
     return false;
-    });
+});
 
 var img_count = 0;
 var img_interval_id;
+
 $(document).ready(function(){ 
-    });
-  </script>
+});
+
+</script>
