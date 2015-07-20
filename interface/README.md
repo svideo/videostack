@@ -16,13 +16,14 @@ x100speed_transcode 接口文档
 #### 描述
     设置staff转码机load值,新添加staff转码机默认load值为100
 #### 参数
+    ip   : staff转码机ip地址
     load : staff转码机负载值
 #### 返回值
     json格式返回操作状态以及失败原因
     status  : success、failed
     message : 失败原因
 #### 示例
-    /interface/staff_load_set?load=60
+    /interface/staff_load_set?ip=192.168.1.100&load=60
 
 ### /interface/video\_uuid\_get
 #### 描述
