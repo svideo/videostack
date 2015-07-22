@@ -48,8 +48,10 @@ class Transcoder:
             os.makedirs(target_dir)
 
         target_filename = target_dir + '/' + filename
-        request_file_path = '/' + dir1 + '/' + dir2 + '/' + dir3 + '/' + filename
-        return (target_filename, request_file_path)
+        storage_path = '/' + dir1 + '/' + dir2 + '/' + dir3 + '/' + filename
+        target_filename = target_filename.replace('.flv', '.ts')
+        storage_path = storage_path.replace('.flv', '.ts')
+        return (target_filename, storage_path)
 
     def run_cmd_async(self, body):
         self.stdin.write(body)
@@ -65,7 +67,11 @@ class Transcoder:
                 file_index  = ts_re.group(2)
                 ts_filename = ts_file.split('/')[-1]
                 (target_file, storage_path) = self.target_file(ts_filename,'ts')
-                shutil.move(ts_file, target_file)
+                #shutil.move(ts_file, target_file)
+                flv2ts_cmd = cmd = "ffmpeg -i " + ts_file +" -c copy -bsf:v h264_mp4toannexb -y "+ target_file +" &> /dev/null"
+                retcode = subprocess.check_call(flv2ts_cmd, shell=True)
+                if retcode != 0:
+                    logging.error("flv2ts source_file: %s target_file: %s failed", ts_file, target_file)
                 create_time = file_create_time(target_file)
                 filesize    = file_size(target_file)
                 bitrate     = self.bitrate
@@ -88,15 +94,9 @@ class Transcoder:
                 snap_index    = snap_re.group(2)
                 snap_filename = snap_img_file.split('/')[-1]
                 (target_file, request_file) = self.target_file(snap_filename, 'snap')
-                print("===========================")
-                print(target_file)
-                print(request_file)
-                print("===========================")
                 shutil.move(snap_img_file, target_file)
                 #info = 'uuid=' + self.uuid +  '&snap_count=' + snap_index
                 info = create_request_info(uuid=self.uuid, snap_count=snap_index)
-                print(self.config['url']['video_uuid_snap_count_set'])
-                print(info)
                 res  = http_callback(self.config['url']['video_uuid_snap_count_set'], info)
                 if res['status'] == 'success':
                     logging.info("uuid: %s snap: %s callbackApi: video_uuid_snap_count_set success", self.uuid, snap_filename)
@@ -116,14 +116,15 @@ class Transcoder:
         abitrate = self.config['segment']['abitrate']
         segment_time = self.config['segment']['time']
         cmd = ""
-        cmd += "ffmpeg -v verbose -i - -map 0 -dn"
-        cmd += " -c:v copy -b:v " + vbitrate + 'k' + " -preset fast -s 86x48 "
-        cmd += " -pix_fmt yuv420p"
-        cmd += " -c:a libfaac -b:a " + abitrate + 'k' + " -ar 32000 -ac 2"
-        cmd += " -bsf:v h264_mp4toannexb -f segment -segment_format mpegts -segment_time " + segment_time
-        #-bsf:v h264_mp4toannexb -f segment -segment_format mpegts
-        cmd += " -y " + tmp_ts_name
-        cmd += " -r 0.5 -s 176x144 -y " + tmp_snap_name + " 2>&1"
+        cmd += "ffmpeg -v verbose -i -"
+        cmd += " -filter_complex \""
+        cmd += " [0:v:0]fps=15,scale=352:288,split=2[voutA][vtmpB],"
+        cmd += " [vtmpB]fps=0.5,scale=176:144[voutB],[0:a:0]asplit=1[aoutA]"
+        cmd += "\" "
+        cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts bitrate=450:no-8x8dct:bframes=0:no-cabac:weightp=0:no-mbtree:me=dia:no-mixed-refs:partitions=i8x8,i4x4:rc-lookahead=0:ref=1:subme=1:trellis=0"
+        cmd += " -c:a libfdk_aac -profile:a aac_he -b:a 16k -f segment -segment_format flv -segment_time 10"
+        cmd += " -y "+ tmp_ts_name +" -map [voutB] -y " + tmp_snap_name + " 2>&1"
+
         if cmd is not None:
             self.cmd = cmd
         else:
