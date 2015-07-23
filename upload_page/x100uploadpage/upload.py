@@ -3,6 +3,7 @@ import socketserver
 import time
 import os
 from transcoder import Transcoder
+from x100daemon import Daemon
 
 
 
@@ -101,7 +102,9 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
 
 if __name__ == "__main__":
+    d = Daemon('/var/run/transcoder.pid')
     try:
+        d.daemonize()
         s = ForkingHTTPServer(("0.0.0.0", 80), MyServer)
         s.serve_forever()
     except KeyboardInterrupt:
