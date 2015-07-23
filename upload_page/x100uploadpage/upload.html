@@ -1,63 +1,3 @@
-<!--
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8">
-    
-    <title>文件上传</title>
-
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/cover.css" rel="stylesheet">
-
-  </head>
-
-  <body>
-    <div class="site-wrapper">
-      <div class="site-wrapper-inner">
-        <div class="cover-container">
-          <div class="masthead clearfix">
-            <div class="inner">
-              <h3 class="masthead-brand"><a href="/">www.speed.com</a></h3>
-            </div>
-          </div>
-
-          <div class="inner cover">
-			  <h1 class="cover-heading">文件上传<h1>
-            <br/>
-			<form class="form-inline" id="upload-form" action="" method="post" enctype="multipart/form-data">
-              <input type="file" class="form-control input-lg" name="upload" id="upload" placeholder="" autofocus>
-              <input type="submit" id="upload" class="btn btn-default btn-lg" value="上传" /> 
-	        </form>
-		    <progress value="0" min="0" max="100" id="uploadprogress"></progress>
-		  </div>
-
-		  <div class="row">
-			  <div class="col-xs-12 myimg" >
-			  </div>
-		  </div>
-
-          <div class="mastfoot">
-            <div class="inner">
-            </div>
-          </div>
-
-		  <div style="display:none">
-		    <img class="progress_img img-responsive" style="float:left;max-width:80px;position:relative" src="">
-		  </div>
-
-		  <div style="display:none" id="show_play_link">
-			  <div class="row">
-				  <div class="col-offset-xs-4 col-xs-8">
-					播放地址: <a id="m3u8_url" href="#"></a>
-				  </div>
-			  </div>
-		  </div>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
--->
 <!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -119,13 +59,13 @@
 <script src="jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
 	function upload_start() {
-		img_interval_id = setInterval(new_snap, 1500);
-		player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
+		//img_interval_id = setInterval(new_snap, 1500);
+		//player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
 		get_video_id();
 	}
 
 	function new_snap() {
-		var snap_url_api = "http://10.221.193.196:5000/interface/video_uuid_new_image_get?uuid=" + video_id
+		var snap_url_api = "http://10.221.193.64/interface/get_video_new_snap_image?video_id=" + video_id
 		$.get(snap_url_api, function(data){
 				console.log(data);
 				if(data!="" && data.image_url != last_snap) {
@@ -158,12 +98,14 @@
 
 	function get_video_id() {
 		$.ajax({
-			url: 'http://10.221.193.196:5000/interface/video_uuid_get',
+			url: 'http://10.221.193.64/interface/get_video_id',
 			type: "GET",
 			dataType: "json",
 			success: function (data) {
-				video_id = data.uuid
-				console.log(data.uuid);
+				video_id = data.video_id
+				upload_ip = data.ip
+				console.log(video_id);
+				console.log(upload_ip)
 				upload_file();
 			}
 		});
@@ -199,7 +141,7 @@
 
 		$.ajax({
 			type: "POST",		
-			url : "http://www.speed.com/action.php",
+			url : "",
 			data: formdata,
 			xhr: function() {
 				var myxhr = $.ajaxSettings.xhr();
@@ -235,6 +177,7 @@
 	var player_hostname = 'http://10.221.193.196:5000';
 	var m3u8_hostname = 'http://10.221.193.196:5000';
 	var player_m3u8_interval_id;
+	var upload_ip;
 	$(document).ready(function(){ 
 			});
 </script>

@@ -5,7 +5,7 @@ def process_find(find_cmd):
     stats = subprocess.Popen(['pidstat','-ruht'], stdout=subprocess.PIPE, close_fds=True).communicate()[0]
 
     stats_data = stats.splitlines()
-    del stats_data[0:2] # Deletes Unix system data
+    del stats_data[0:2] # Deletes system data
 
     converted_data = []
     for line in stats_data:
@@ -23,7 +23,7 @@ def process_find(find_cmd):
             memory = "{0:.3}".format(process_memory_mb)
             memory = memory.replace(",", ".")
 
-            cpu = "{0:.2f}".format( float( data_dict["%CPU"].replace(",", ",") ) )
+            cpu = "{0:.2f}".format( float( data_dict["%CPU"].replace(",", ".") ) )
             cpu = cpu.replace(",", ".")
 
             command = data_dict["Command"]

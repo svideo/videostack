@@ -15,9 +15,13 @@ def video_bitrate_add(url, uuid, bitrate):
     info = 'bitrate=' + bitrate + '&uuid=' + uuid
     return http_callback(url, info)
 
-def video_status_set(url, uuid, status, bitrate=None):
+def update_video_status(url, video_id, status, bitrate=None):
     if bitrate is not None:
-        info = create_request_info(uuid=uuid, bitrate=bitrate, status=status)
+        info = create_request_info(video_id=video_id, bitrate=bitrate, status=status)
     else:
-        info = create_request_info(uuid=uuid, status=status)
+        info = create_request_info(video_id=video_id, status=status)
+    print("xxxxxxxxxxxxxxxxxxxxxx")
+    print(url)
+    print(info)
+    print("xxxxxxxxxxxxxxxxxxxxxx")
     return http_callback(url, info)

@@ -102,9 +102,9 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
 
 if __name__ == "__main__":
-    d = Daemon('/var/run/transcoder.pid')
+    #d = Daemon('/var/run/transcoder.pid')
+    #d.daemonize()
     try:
-        d.daemonize()
         s = ForkingHTTPServer(("0.0.0.0", 80), MyServer)
         s.serve_forever()
     except KeyboardInterrupt:
