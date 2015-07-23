@@ -51,13 +51,8 @@ def video_uuid_get():
     response.headers['Access-Control-Allow-Methods'] = 'GET'
     response.headers['Access-Control-Allow-Origin'] = '*'
     
-    hash_string = ip + userAgent + str(millisecond)
-    idgen       = x100idgen.IdGen()
-    uuid        = idgen.gen_id(hash_string)
-    
     r           = redis_connect()
     staff_list  = r.hgetall('x100speed_hash_staff') 
-    
     if not staff_list:
         response.data = '{"status":"failed", "message":"staff ip empty"}'
         return response
@@ -66,9 +61,14 @@ def video_uuid_get():
     if not idle_staff_list:
         response.data = '{"status":"failed", "message":"staff is busying"}'
         return response
+    
     staff    = idle_staff_list.popitem()
     staff_ip = staff[0].decode()
 
+    hash_string = ip + userAgent + str(millisecond)
+    idgen       = x100idgen.IdGen()
+    uuid        = idgen.gen_id(hash_string)
+    
     infor = '{"uuid":"' + uuid + '","ip":"' + staff_ip + '"}'
     response.data = infor
     return response
@@ -103,7 +103,11 @@ def video_uuid_info_get():
 def video_uuid_status_set():
     uuid   = request.args.get('uuid')
     status = request.args.get('status')
-    ip     = request.remote_addr
+    
+    if not request.headers.getlist("X-Forwarded-Host"):
+        ip = request.remote_addr
+    else:
+        ip = request.headers.getlist("X-Forwarded-Host")[0]
 
     response  = make_response()
     response.headers['Access-Control-Allow-Methods'] = 'GET'
@@ -310,7 +314,7 @@ def video_uuid_play(play_url):
     for bitrate in bitrates_list:
         total_bitrate = int(bitrate) * 1024
         m3u8_value   += '#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=' + str(total_bitrate) + '\n'
-        m3u8_value   += 'http://10.221.193.196:5000/interface/' + uuid + '_' + bitrate + '.m3u8\n'
+        m3u8_value   += 'http://10.221.193.64/interface/' + uuid + '_' + bitrate + '.m3u8\n'
 
     response.data = m3u8_value
     return response
@@ -341,7 +345,13 @@ def video_uuid_play_child(play_url, play_bitrate):
         return response
 
     uuid_sortedset = 'x100speed_sortedset_' + uuid + '_' + str(bitrate)
-    fragment_list  = r.zrange(uuid_sortedset, -3, -1)
+    fragment_list  = ""
+
+    if play_type == "live":
+        fragment_list = r.zrange(uuid_sortedset, -3, -1)
+    elif play_type == "vod":
+        fragment_list = r.zrange(uuid_sortedset, 0, -1)
+    
     if not fragment_list:
         response.data = ""
         return response
@@ -375,6 +385,9 @@ def video_uuid_play_child(play_url, play_bitrate):
     uuid_m3u8 += "#EXT-X-ALLOW-CACHE:YES\n"
     uuid_m3u8 += uuid_m3u8_tmp
 
+    if play_type == "vod":
+        uuid_m3u8 += "#EXT-X-ENDLIST\n"
+    
     response.data = uuid_m3u8
     return response
 
@@ -389,4 +402,4 @@ def redis_connect():
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(host='0.0.0.0', port=6000)
+    app.run(host='0.0.0.0', port=5000)
