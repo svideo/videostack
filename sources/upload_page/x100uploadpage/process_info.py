@@ -1,5 +1,7 @@
 import subprocess, re
-
+import socket
+import urllib.request
+import json
 
 def process_find(find_cmd):
     stats = subprocess.Popen(['pidstat','-ruht'], stdout=subprocess.PIPE, close_fds=True).communicate()[0]
@@ -34,11 +36,31 @@ def process_find(find_cmd):
                 converted_data.append(extracted_data)
     return converted_data
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 0))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+def http_callback(url, info):
+    request_url = url + '?' + info
+    request = urllib.request.Request(request_url)
+    with urllib.request.urlopen(request) as f:
+        return json.loads(f.read().decode('utf-8'))
 
 if __name__ == "__main__":
     process_ffmpeg = process_find('ffmpeg')
-    print(process_ffmpeg)
-    print("ffmpeg count: %d" % len(process_ffmpeg))
-
-
-
+    process_ffmpeg_count = len(process_ffmpeg)
+    local_ip = get_ip()
+    request_info = 'ip=' + local_ip + '&process_count=' + str(process_ffmpeg_count)
+    res = http_callback('http://10.221.193.64/interface/update_staff_monitor', request_info)
+    if res['status'] == 'failed':
+        print('error: %s' % res['message'])
+    else:
+        print('success')

@@ -3,31 +3,37 @@ import os, sys, re, select, subprocess, io, time, shutil, logging
 import urllib.request
 from x100.x100config import load_config
 from x100.x100util import md5, file_create_time, file_size, non_blocking_handler, create_request_info
-from x100.x100http import http_callback, update_video_status
+from x100.x100request import http_callback, update_video_status
 
 class Transcoder:
+    #def __init__(self, config_file):
+    #    self.config = load_config(config_file)
+    #    self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
+    #    self._log()
     def __init__(self):
         self.config = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
-        self._log()
+        self.init_popen_handler()
+        self._log_config()
 
-    def _log(self):
+    def _log_config(self):
         logging.basicConfig(level=logging.INFO)
 
     def handle_body(self, name, body):
         if name == b'video_id':
             video_id = body.decode().rstrip()
             self.video_id = video_id
-            self.init_popen_handler()
-            res = update_video_status(self.config['url']['update_video_status'], self.video_id, 'proceed', str(self.bitrate))
-            print("++++++++++++++++++++++++")
-            print(res)
-            print("++++++++++++++++++++++++")
-            if res['status'] == 'failed':
-                logging.error("video_id: %s callbackApi: update_video_status error: %s", self.video_id, res['message'])
-                return
-        elif(name == b'upload'):
+            #self.init_popen_handler()
+            request_info = create_request_info(video_id=self.video_id, status='proceed', bitrate=str(self.bitrate))
+            res = http_callback(self.config['url']['update_video_status'], request_info)
+            self.log(res, self.video_id, 'update_video_status', None)
+            #if res['status'] == 'failed':
+            #    logging.error("video_id: %s callbackApi: update_video_status error: %s", self.video_id, res['message'])
+            #    return
+        elif name == b'upload':
             self.run_cmd_async(body)
+
+        return
 
     def init_popen_handler(self):
         cmd = self.build_cmd()
@@ -41,7 +47,6 @@ class Transcoder:
 
     def target_file(self, filename, file_type):
         basedir = self.config['storage']['release_dir']
-        # filename like xxxxx.flv
         md5_str = md5(filename)
 
         dir1 = md5_str[:3]
@@ -55,7 +60,6 @@ class Transcoder:
         target_filename = target_dir + '/' + filename
         storage_path    = '/' + dir1 + '/' + dir2 + '/' + dir3 + '/' + filename
 
-        # target file is ts file, so format .flv to .ts
         target_filename = target_filename.replace('.flv', '.ts')
         storage_path    = storage_path.replace('.flv', '.ts')
         return (target_filename, storage_path)
@@ -71,51 +75,59 @@ class Transcoder:
             line  = line.decode()
             ts_re = re.search("segment:\'(.*?)\'\s+count:(\d+).*", line)
             if ts_re:
-                ts_file     = ts_re.group(1)
+                ts_file        = ts_re.group(1)
                 ts_file_index  = ts_re.group(2)
-                ts_filename = ts_file.split('/')[-1]
+                ts_filename    = ts_file.split('/')[-1]
+
                 (target_file, storage_path) = self.target_file(ts_filename,'ts')
-                #shutil.move(ts_file, target_file)
+
                 flv2ts_cmd = cmd = "ffmpeg -i " + ts_file +" -c copy -bsf:v h264_mp4toannexb -y "+ target_file +" &> /dev/null"
                 retcode = subprocess.check_call(flv2ts_cmd, shell=True)
                 if retcode != 0:
                     logging.error("flv2ts source_file: %s target_file: %s failed", ts_file, target_file)
-                create_time = file_create_time(target_file)
-                filesize    = file_size(target_file)
-                bitrate     = self.bitrate
-                req_info    = create_request_info(video_id=self.video_id, hostname=self.config['base']['hostname'],\
-                                      storage_path=storage_path, frame_count=self.config['segment']['fps_count'],\
-                                      file_size=str(filesize), fragment_id=ts_file_index, bitrate=str(bitrate),\
-                                      fps=self.config['segment']['fps'], create_time=create_time)
+                    continue
 
-                print(req_info)
-                #res = callback_segment_add(self.video_id, req_str)
+                request_info = self.segment_request_info(target_file, ts_file_index)
                 add_video_segment_url = self.config['url']['add_video_segment']
-                res = http_callback( add_video_segment_url, req_info)
-                if res['status'] == 'success':
-                    logging.info("video_id: %s segment: %s callbackApi: %s success", self.video_id, storage_path, add_video_segment_url)
-                else:
-                    logging.error("video_id:%s segment: %s callbackApi: %s error: %s", self.video_id, storage_path, add_video_segment_url, res['message'])
+
+                res = http_callback( add_video_segment_url, request_info)
+                self.log(res, self.video_id, 'add_video_segment', storage_path)
+                #if res['status'] == 'success':
+                #    logging.info("video_id: %s segment: %s callbackApi: %s success", self.video_id, storage_path, add_video_segment_url)
+                #else:
+                #    logging.error("video_id:%s segment: %s callbackApi: %s error: %s", self.video_id, storage_path, add_video_segment_url, res['message'])
 
             snap_re = re.search("snap:\'(.*?)\'\s+count:(\d+).*", line)
             if snap_re:
                 snap_img_file = snap_re.group(1)
                 snap_index    = snap_re.group(2)
                 snap_filename = snap_img_file.split('/')[-1]
-                (target_file, request_file) = self.target_file(snap_filename, 'snap')
+                (target_file, storage_path) = self.target_file(snap_filename, 'snap')
+
                 shutil.move(snap_img_file, target_file)
-                #info = 'video_id=' + self.video_id +  '&snap_count=' + snap_index
-                print("=============================")
-                print(self.video_id)
-                print(snap_index)
-                print("=============================")
+
                 info = create_request_info(video_id=self.video_id, snap_image_count=snap_index)
+
                 res  = http_callback(self.config['url']['update_video_snap_image_count'], info)
-                if res['status'] == 'success':
-                    logging.info("video_id: %s snap: %s callbackApi: update_video_snap_image_count success", self.video_id, snap_filename)
-                else:
-                    logging.error("video_id:%s snap: %s callbackApi: update_video_snap_image_count  error: %s", self.video_id, snap_filename, res['message'])
+                self.log(res, self.video_id, 'update_video_snap_image_count', storage_path)
         return
+
+    def segment_request_info(self, filepath, file_index):
+        create_time  = file_create_time(filepath)
+        filesize     = str(file_size(filepath))
+        bitrate      = str(self.bitrate)
+        video_id     = self.video_id
+        hostname     = self.config['base']['hostname']
+        storage_path = filepath
+        frame_count  = self.config['segment']['fps_count']
+        fragment_id  = file_index
+
+        req_info     = create_request_info(
+                            video_id=self.video_id, hostname=self.config['base']['hostname'],\
+                            storage_path=storage_path, frame_count=self.config['segment']['fps_count'],\
+                            file_size=str(filesize), fragment_id=file_index, bitrate=str(bitrate),\
+                            fps=self.config['segment']['fps'], create_time=create_time)
+        return req_info
 
     def running(self):
         return self.poll is None
@@ -145,17 +157,26 @@ class Transcoder:
             self.cmd = cmd
         else:
             self.cmd = ""
+
         return cmd
 
-    def __del__(self):
-        self.stdin.close()
-        while True:
-            content = self.stdout.read(-1)
-            if not content:
-                break
-            print(content)
-        #video_status_set(url, video_id, status, bitrate=None):
-        res = update_video_status(self.config['url']['update_video_status'], self.video_id, 'success')
-        if res['status'] == 'failed':
-            logging.error('video_id: %s error: %s', self.video_id, res['message'])
+    def log(self, response, video_id, apiname, filename):
+        if response['status'] == 'success':
+            logging.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
+        else:
+            logging.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
         return
+
+    def __del__(self):
+        #self.stdin.close()
+        #while True:
+        #    content = self.stdout.read(-1)
+        #    if not content:
+        #        break
+        #    print(content)
+        ##video_status_set(url, video_id, status, bitrate=None):
+        #res = update_video_status(self.config['url']['update_video_status'], self.video_id, 'success')
+        #if res['status'] == 'failed':
+        #    logging.error('video_id: %s error: %s', self.video_id, res['message'])
+        #return
+        pass
