@@ -12,18 +12,18 @@ API Reference
 #### 示例
     /interface/add_staff_ip?ip=192.168.1.100
 
-### /interface/update\_staff\_load
+### /interface/update\_staff\_monitor
 #### 描述
-    设置staff转码机load值,新添加staff转码机默认load值为100
+    更新staff转码机monitor
 #### 参数
-    ip   : staff转码机ip地址
-    load : staff转码机负载值
+    ip            : staff转码机ip地址
+    process_count : staff转码机进程数
 #### 返回值
     json格式返回操作状态以及失败原因
     status  : success、failed
     message : 失败原因
 #### 示例
-    /interface/update_staff_load?ip=192.168.1.100&load=60
+    /interface/update_staff_load?ip=192.168.1.100&process_count=1
 
 ### /interface/get\_video\_id
 #### 描述

@@ -35,16 +35,16 @@ Redis Storage Design
 
 ### x100speed\_hash\_staff
 #### 描述
-    使用hash结构存储staff转码机ip地址、load。ip数据类型为字符串，load数据类型为浮点数以字符串形式保存
-| Describe   | Data Structure | Key                    | Field         | Value   |
-| ---------- |:--------------:|:----------------------:|:-------------:|:-------:|
-| field name | hash           | x100speed\_hash\_staff | ip            | load    |
-| example    | hash           | x100speed\_hash\_staff | 192.168.1.100 | 90.5    |
+    使用hash结构存储staff转码机ip地址、process_count。ip数据类型为字符串，process_count数据类型整数以字符串形式保存
+| Describe   | Data Structure | Key                    | Field         | Value            |
+| ---------- |:--------------:|:----------------------:|:-------------:|:----------------:|
+| field name | hash           | x100speed\_hash\_staff | ip            | process_count    |
+| example    | hash           | x100speed\_hash\_staff | 192.168.1.100 | 0                |
 
 #### 操作
     添加staff主机
     HSET x100speed_hash_staff 192.168.1.100 0
     
     更新staff主机load
-    HSET x100speed_hash_staff 192.168.1.100 99.9
+    HSET x100speed_hash_staff 192.168.1.100 1
     

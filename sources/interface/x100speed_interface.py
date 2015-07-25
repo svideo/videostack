@@ -5,8 +5,8 @@ app = Flask(__name__)
 
 @app.route("/interface/add_staff_ip")
 def add_staff_ip():
-    ip   = request.args.get('ip')
-    load = 100
+    ip            = request.args.get('ip')
+    process_count = 100
 
     response  = make_response()
     response.headers['Access-Control-Allow-Origin']  = '*'
@@ -17,26 +17,26 @@ def add_staff_ip():
         return response
     
     r = redis_connect()
-    r.hset('x100speed_hash_staff', ip, load)
+    r.hset('x100speed_hash_staff', ip, process_count)
 
     response.data = '{"status":"success", "message":""}'
     return response
 
-@app.route("/interface/update_staff_load")
-def update_staff_load():
-    ip   = request.args.get('ip')
-    load = request.args.get('load') 
+@app.route("/interface/update_staff_monitor")
+def update_staff_monitor():
+    ip            = request.args.get('ip')
+    process_count = request.args.get('process_count') 
 
     response  = make_response()
     response.headers['Access-Control-Allow-Origin']  = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET'
     
-    if not ip or not load:
-        response.data = '{"status":"failed", "message":"ip or load empty"}'
+    if not ip or not process_count:
+        response.data = '{"status":"failed", "message":"ip or process_count empty"}'
         return response
 
     r = redis_connect()
-    r.hset('x100speed_hash_staff', ip, load)
+    r.hset('x100speed_hash_staff', ip, process_count)
 
     response.data = '{"status":"success", "message":""}'
     return response
@@ -62,7 +62,7 @@ def get_video_id():
         response.data = '{"status":"failed", "message":"staff ip empty"}'
         return response
 
-    idle_staff_list = {key: value for key, value in staff_list.items() if float(value) < 30}    
+    idle_staff_list = {key: value for key, value in staff_list.items() if int(value) <= 0}    
     if not idle_staff_list:
         response.data = '{"status":"failed", "message":"staff is busying"}'
         return response
