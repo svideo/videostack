@@ -4,7 +4,6 @@ NAME
     x100http - WebFramework support customing file upload processing
 
 
-
 SYNOPSIS
 ========
 
@@ -16,7 +15,7 @@ SYNOPSIS
     app = X100HTTP()
 
     def hello_world(req):
-        remote_ip = req['remote_ip']
+        remote_ip = req.get_remote_ip()
         response = "<html><body>hello, " + remote_ip + "</body></html>"
         return response
 
@@ -24,26 +23,22 @@ SYNOPSIS
     app.run("0.0.0.0", 8080)
 
 
-
 DESCRIPTION
 ===========
 
-    x100http is a webframework helps you customing HTTP file upload processing.
+    x100http is a lite webframework designed for processing HTTP file upload.
 
 
-
-METHODS
-=======
+CLASS X100HTTP
+==============
 
 X100HTTP()
 ----------
     return a instance of x100http which wrapped below functions.
 
-
 run(listern_ip, listen_port)
 ----------------------------
     run a forking server on address ``listern_ip``:``listern_port``
-
 
 get(url, handler_function)
 --------------------------
@@ -55,7 +50,6 @@ get(url, handler_function)
 
     struct ``request`` (will explain below) will be passed to the handlder function when it is called.
 
-
 post(url, handler_function)
 ---------------------------
     set a route acl of HTTP "POST" method with header "Content-Type: application/x-www-form-urlencoded".
@@ -66,29 +60,27 @@ post(url, handler_function)
 
     struct ``request`` (will explain below) will be passed to the handlder function when it is called.
 
-
-upload(url, handler_function_init, handler_function_process, handler_function_del)
+upload(url, upload_handler_class)
 ----------------------------------------------------------------------------------
     set a route acl of HTTP "POST" method with header "Content-Type: multipart/form-data".
 
-    ``handler_function_init`` will be called when file upload start.
+    A new instance of class ``upload_handler_class`` will be created when file upload start.
 
-    struct "request" (will explain below) will be passed to ``handler_function_init``.
+    struct "request" (will explain below) will be passed to ``upload_handler_class.upload_start()``.
 
-    ``handler_function_process`` will be called every time when the buffer is full when file uploading.
+    ``upload_handler_class.upload_process()`` will be called every time when the buffer is full when file uploading.
 
-    two args will be passed to ``handler_function_process``.
+    two args will be passed to ``upload_handler_class.upload_process()``.
 
     first arg is the name of the input in the form, second arg is the content of the input in the form.
 
     the binary content of the upload file will be passed by the second arg.
 
-    struct "request" (will explain below) will NOT be passed to ``handler_function_process``.
+    struct "request" (will explain below) will NOT be passed to ``upload_handler_class.upload_finish()``.
 
-    ``handler_function_del`` will be called when file upload finished, this function must return a string as the HTTP response body to the visitor.
+    ``upload_handler_class.upload_finish()`` will be called when file upload finished, this function must return a string as the HTTP response body to the visitor.
 
-    struct "request" (will explain below) will be passed to ``handler_function_del``.
-
+    struct "request" (will explain below) will be passed to ``upload_handler_class.upload_finish()``.
 
 set_upload_buf_size(buf_size)
 -----------------------------
@@ -96,82 +88,54 @@ set_upload_buf_size(buf_size)
 
     the unit of ``buf_size`` is byte, default value is 4096 byte.
 
-    ``handler_function_process`` will be called to process the buffer every time when the buffer is full.
+    ``upload_handler_class.upload_process()`` will be called to process the buffer every time when the buffer is full.
 
 
+CLASS X100REQUEST
+=================
 
-STRUCT REQUEST
-==============
+    A instance of class ``X100Request`` will be passed into every handler function.
 
-    ``request`` will be passed into the handler function you set, you can use these informations in your app logic.
+get_remote_ip()
+---------------
+    Return the IP address of the visitor.
 
-    ``request`` is a dictionary filled with key-values below.
+get_body()
+----------
+    Return the body section of the HTTP request.
 
-remote_ip
----------
-    The IP address of the visitor.
+    Will be empty when the HTTP method is "GET" or "POST - multipart/form-data".
 
+get_query_string()
+------------------
+    Return the query string of the page was accessed, if any.
 
-body
-----
-    The body part of the HTTP request.
+get_arg(arg_name)
+-----------------
 
-    ``body`` is a empty string when the request is sent by HTTP method "GET" or "POST - multipart/form-data".
+    args parsed from ``query_string`` when the request is sent by "GET" or "POST - multipart/form-data".
 
+    args parsed from ``body`` when the request is sent by "POST - application/x-www-form-urlencoded".
 
-query_string
-------------
-    The query string, if any, via which the page was accessed.
-
-
-args
-----
-    A dictionary of variables passed to the handler function via the URL parameters.
-
-    ``args`` parse from ``query_string`` when the request is sent by HTTP method "GET" or "POST - multipart/form-data".
-
-    ``args`` parse from ``body`` when the request is sent by HTTP method "POST - application/x-www-form-urlencoded".
+get_header(header_name)
+-----------------------
+    Return the header`s value of the ``header_name``, if any.
 
 
+CLASS X100RESPONSE
+==================
 
-PROCESS FILE UPLOAD
-===================
+set_body(content)
+-----------------
 
-    x100http is designed for custom file processing, it can be used to optimize the video transcoding process.
+    Set the response data to visitor.
 
-    ``handler_function_init``, ``handler_function_process``, ``handler_function_del`` will be called when file upload.
+    Type 'str' and type 'bytes' are both accepted.
 
-    you can simulate a traditional file upload processing like this:
+set_header(name, value)
+-----------------------
 
-    1. open a file in ``handler_function_init``
-
-    2. when ``handler_function_init`` be called, write content to the file
-
-    3. close file in ``handle_function_del``
-
-
-handler_function_init(request)
-------------------------------
-    this function will be called when file upload start with arg ``request``.
-
-
-handler_function_process(name, content)
----------------------------------------
-    this function will be called every time x100http read something throught network.
-
-    the function will be called many times when big file uploading, it need to process a part of the file every time.
-
-    ``name`` is the html input`s name.
-
-    ``content`` is the html input`s value, binary file content some.
-
-
-handler_function_del(request)
------------------------------
-    this function will be called when file upload finished.
-
-    x100http expect a string from this function ues to construct HTTP response.
-
+    Set the HTTP header.
 
 
 HTTP ERROR 500
@@ -180,19 +144,17 @@ HTTP ERROR 500
     visitor will get HTTP error "500" when the handler function of the url he visit raise an error or code something wrong.
 
 
-
 SUPPORTED PYTHON VERSIONS
 =========================
 
     x100http only supports python 3.3 or newer.
 
 
+MORE EXAMPLES
+=============
 
-EXAMPLES
-========
-
-process get
------------
+get visitor ip
+--------------
 
 .. code-block::
 
@@ -201,16 +163,15 @@ process get
     app = X100HTTP()
 
     def hello_world(req):
-        remote_ip = req['remote_ip']
+        remote_ip = req.get_remote_ip()
         response = "<html><body>hello, " + remote_ip + "</body></html>"
         return response
 
     app.get("/", hello_world)
     app.run("0.0.0.0", 8080)
 
-
-process post
-------------
+post method route
+-----------------
 
 .. code-block::
 
@@ -228,108 +189,51 @@ process post
         return response
 
     def post_handler(req):
-        remote_ip = req['remote_ip']
-        abc = req['args']['abc']
-        response = "<html><body>hello, " + remote_ip + " you typed: " + abc + "</body></html>"
+        remote_ip = req.get_remote_ip()
+        abc = req.get_arg('abc')
+        response = "hello, " + remote_ip + " you typed: " + abc
         return response
 
     app.get("/", index)
     app.post("/form", post_handler)
     app.run("0.0.0.0", 8080)
 
-
 process file upload
 -------------------
 
 .. code-block::
 
-    from x100http import X100HTTP
+    from x100http import X100HTTP, X100Response
+
+    class UploadHandler:
+
+        def upload_start(self, req):
+            self.content = "start"
+
+        def upload_process(self, key, line):
+            self.content += line.decode()
+
+        def upload_finish(self, req):
+            return "upload succ, content = " + self.content
 
     app = X100HTTP()
-    fp = ""
-
-    def index(req):
-        response = "<html><body>" \
-            + "<form name="abc" action="/upload" method="post">" \
-            + "<input type="text" name="abc" />" \
-            + "<input type="file" name="file_upload" />" \
-            + "<input type="submit" name="submit" />" \
-            + "</form>" \
-            + "</body></html>"
-        return response
-
-    def upload_init(req):
-        fp = open("upload_file.bin", mode="ab")
-        return
-
-    def upload_ing(key, body):
-        if name == b'file_upload':
-            fp.write(body)
-        elif name == b'abc':
-            print(body)         
-        return
-
-    def upload_finish(req):
-        fp.close()
-        return req['remote_ip'] + ", your file uploaded."
-
-    app.get("/", index)
-    app.upload("/upload", upload_init, upload_ing, upload_finish)
-
+    app.upload("/upload", UploadHandler)
     app.run("0.0.0.0", 8080)
 
-     
-a more complex example
-----------------------
+set http header
+---------------
 
 .. code-block::
 
     from x100http import X100HTTP
 
+    def get_custom_header(req):
+        remote_ip = req.get_remote_ip()
+        response = X100Response()
+        response.set_header("X-My-Header", "My-Value")
+        response.set_body("<html><body>hello, " + remote_ip + "</body></html>")
+        return response
+
     app = X100HTTP()
-
-    def get_test(req):
-        body = req['body']
-        abc = req['args']['abc']
-        remote_ip = req['remote_ip']
-
-        response = "<html><body>get test succ <br/>" \
-            + "body:[" + body + "]<br/>" \
-            + "args:[" + abc + "]<br/>" \
-            + "ip:[" + remote_ip + "]" \
-            + "</body></html>"
-        return response
-
-
-    def post_test(req):
-        body = req['body']
-        abc = req['args']['abc']
-        remote_ip = req['remote_ip']
-
-        response = "<html><body>post test succ <br/>" \
-            + "body:[" + body + "]<br/>" \
-            + "args:[" + abc + "]<br/>" \
-            + "ip:[" + remote_ip + "]" \
-            + "</body></html>"
-        return response
-
-    def upload_test_init(req):
-        print(req['remote_ip'])
-        return
-
-    def upload_test_ing(key, body):
-        print(key)
-        print("write")
-        return
-
-    def upload_test_del(req):
-        return req['remote_ip']
-
-    app.set_upload_buf_size(8192)
-    app.get("/get", get_test)
-    app.post("/post", post_test)
-    app.upload("/upload", upload_test_init, upload_test_ing, upload_test_del)
-
+    app.upload("/", get_custom_header)
     app.run("0.0.0.0", 8080)
-     
-
