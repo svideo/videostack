@@ -128,7 +128,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
             self.upload_cls.upload_process(self._content_key, line)
         except:
             self.__class__.logger.logger.warning(
-                "upload_process() def exec error: " + str(sys.exc_info()[0]) )
+                "upload_process() def exec error: " + sys.exc_info()[0])
             return
 
     def _handle_a_line(self, line):
@@ -185,7 +185,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 self.upload_cls.upload_start(req)
             except:
                 self.__class__.logger.logger.warning(
-                    "upload_start() def exec error: " + str(sys.exc_info()[0]) )
+                    "upload_start() def exec error: " + sys.exc_info()[0])
                 self.send_error(500)
                 return
 
@@ -213,7 +213,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 response = self.make_x100response(response)
             except:
                 self.__class__.logger.logger.warning(
-                    "upload_finish() def exec error: " + str(sys.exc_info()[0]) )
+                    "upload_finish() def exec error: " + sys.exc_info()[0])
                 self.send_error(500)
             else:
                 self.send_x100response(response)
