@@ -13,7 +13,6 @@ class Transcoder:
     def __init__(self):
         self.config = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
-        self.init_popen_handler()
         self._log_config()
 
     def _log_config(self):
@@ -23,7 +22,7 @@ class Transcoder:
         if name == b'video_id':
             video_id = body.decode().rstrip()
             self.video_id = video_id
-            #self.init_popen_handler()
+            self.init_popen_handler()
             request_info = create_request_info(video_id=self.video_id, status='proceed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
             self.log(res, self.video_id, 'update_video_status', None)
@@ -36,7 +35,7 @@ class Transcoder:
         return
 
     def init_popen_handler(self):
-        cmd = self.build_cmd()
+        cmd = self.build_cmd(self.video_id)
         print(cmd)
         p = subprocess.Popen(cmd, bufsize=0, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         self.stdout = p.stdout
@@ -92,10 +91,6 @@ class Transcoder:
 
                 res = http_callback( add_video_segment_url, request_info)
                 self.log(res, self.video_id, 'add_video_segment', storage_path)
-                #if res['status'] == 'success':
-                #    logging.info("video_id: %s segment: %s callbackApi: %s success", self.video_id, storage_path, add_video_segment_url)
-                #else:
-                #    logging.error("video_id:%s segment: %s callbackApi: %s error: %s", self.video_id, storage_path, add_video_segment_url, res['message'])
 
             snap_re = re.search("snap:\'(.*?)\'\s+count:(\d+).*", line)
             if snap_re:
@@ -132,14 +127,14 @@ class Transcoder:
     def running(self):
         return self.poll is None
 
-    def build_cmd(self):
+    def build_cmd(self, video_id):
         #target_ts_name, target_snap_name = self.target_filename()
         storage_dir = self.config['storage']['dir']
         if not os.path.exists(storage_dir):
             os.makedirs(storage_dir)
 
-        tmp_ts_name = storage_dir + '/' + self.video_id + "_%d.flv"
-        tmp_snap_name = storage_dir + '/' + self.video_id + "_%d.jpg"
+        tmp_ts_name = storage_dir + '/' + video_id + "_%d.flv"
+        tmp_snap_name = storage_dir + '/' + video_id + "_%d.jpg"
         vbitrate = self.config['segment']['vbitrate']
         abitrate = self.config['segment']['abitrate']
         segment_time = self.config['segment']['time']

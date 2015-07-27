@@ -45,13 +45,13 @@
 	</div>
 
 
-	<div style="display:none" id="show_play_link">
+	<div style="display:none" id="show_player_url">
 		<div class="row">
 			<div class="col-offset-xs-4 col-xs-8">
 				播放地址: <a id="m3u8_url" href="#"></a>
 			</div>
 		</div> <!-- row -->
-	</div> <!-- show_play_link -->
+	</div> <!-- show_player_url -->
 
   </body>
 </html>
@@ -101,14 +101,34 @@
 			url: 'http://10.221.193.64/interface/get_video_id',
 			type: "GET",
 			dataType: "json",
+			timeout: 1000,
 			success: function (data) {
-				video_id = data.video_id
-				upload_ip = data.ip
-				console.log(video_id);
-				console.log(upload_ip)
-				upload_file();
+				if (data.status === 'success') {
+					video_id = data.video_id
+					upload_ip = data.ip
+					console.log(video_id);
+					console.log(upload_ip)
+					upload_file();
+				}
+				else { //failed
+					alert(data.message); // machine is busy, stop upload
+					stop_all_timer();
+				}
+			},
+			error: function (x, t, m) {
+				if(t==="timeout") {
+					console.log("api got timeout");
+				} else {
+					console.log(t);
+				}
+				stop_all_timer();
 			}
 		});
+	}
+		
+	function stop_all_timer() {
+		clearInterval(img_interval_id);
+		clearInterval(player_m3u8_interval_id);
 	}
 
 	function get_m3u8_content() {
@@ -121,7 +141,7 @@
 				if (data != "") {
 					$('#m3u8_url').attr("href", player_url);
 					$('#m3u8_url').html(m3u8_url);
-					$('#show_play_link').show();
+					$('#show_player_url').show();
 					clearInterval(player_m3u8_interval_id);
 				}
 			}
@@ -141,7 +161,7 @@
 
 		$.ajax({
 			type: "POST",		
-			url : "",
+			url : "/upload",
 			data: formdata,
 			xhr: function() {
 				var myxhr = $.ajaxSettings.xhr();

@@ -33,35 +33,21 @@ def create_request_info(**kwargs):
         info += k + '=' + v + '&'
     return info
 
-def daemonize():
-    try:
-        pid = os.fork()
-        if pid > 0: # parent
-            sys.exit(0)
-    except OSError as err:
-        sys.stderr.write("fork first failed " + err)
+def target_file(release_dir, filename, file_type):
 
-        os.chdir('/')
-        os.setsid()
-        os.umask(0)
+    md5_str = md5(filename)
 
-    try:
-        pid = os.fork()
-        if pid > 0:
-            sys.exit(0)
-    except OSError as err:
-        sys.stderr.write("fork second failed " + err)
-        sys.exit(1)
+    dir1 = md5_str[:3]
+    dir2 = md5_str[3:6]
+    dir3 = md5_str[6:9]
 
-    sys.stdout.flush()
-    sys.stderr.flush()
+    target_dir   = release_dir + '/' + file_type + '/' + dir1 + '/' + dir2 + '/' + dir3
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
 
-    si = open(os.devnull, 'r')
-    so = open(os.devnull, 'a+')
-    se = open(os.devnull, 'a+')
+    target_filename = target_dir + '/' + filename
+    storage_path    = '/' + dir1 + '/' + dir2 + '/' + dir3 + '/' + filename
 
-    os.dup2(si.fileno(), sys.stdin.fileno())
-    os.dup2(so.fileno(), sys.stdout.fileno())
-    os.dup2(se.fileno(), sys.stderr.fileno())
-
-
+    target_filename = target_filename.replace('.flv', '.ts')
+    storage_path    = storage_path.replace('.flv', '.ts')
+    return (target_filename, storage_path)
