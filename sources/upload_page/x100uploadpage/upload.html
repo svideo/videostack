@@ -53,14 +53,17 @@
 		</div> <!-- row -->
 	</div> <!-- show_player_url -->
 
+	<div id="qrcode"></div>
+
   </body>
 </html>
 
 <script src="jquery-2.1.4.min.js"></script>
+<script src="jquery.qrcode.min.js"></script>
 <script type="text/javascript">
 	function upload_start() {
-		//img_interval_id = setInterval(new_snap, 1500);
-		//player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
+		img_interval_id = setInterval(new_snap, 1500);
+		player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
 		get_video_id();
 	}
 
@@ -78,7 +81,6 @@
 				  $(new_img_node).hide();
 				  $(".myimg").append($(new_img_node));
 				  $(new_img_node).fadeIn("slow");
-				  //$(new_img_node).animate({right: '+100px', opacity: 'show'}, "slow");
 				  img_count += 1;
 				}
 			}, "json");
@@ -103,16 +105,17 @@
 			dataType: "json",
 			timeout: 1000,
 			success: function (data) {
-				if (data.status === 'success') {
+				console.log(data)
+				if (data.status === 'failed') { //failed
+					stop_all_timer();
+					alert(data.message); // machine is busy, stop upload
+				}
+				else { 
 					video_id = data.video_id
 					upload_ip = data.ip
 					console.log(video_id);
 					console.log(upload_ip)
 					upload_file();
-				}
-				else { //failed
-					alert(data.message); // machine is busy, stop upload
-					stop_all_timer();
 				}
 			},
 			error: function (x, t, m) {
@@ -143,6 +146,7 @@
 					$('#m3u8_url').html(m3u8_url);
 					$('#show_player_url').show();
 					clearInterval(player_m3u8_interval_id);
+					create_qrcode(m3u8_url);
 				}
 			}
 		});
@@ -152,6 +156,16 @@
 		$('#uploadprogress').attr("value", 100);
 		clearInterval(img_interval_id);
 		console.log("uplod xxxxx success");
+	}
+
+	function create_qrcode(url) {
+		$("#qrcode").qrcode({ 
+			render: "table",
+			width: 140,
+			height:140,
+			//text: url
+			text: "http://www.cnperler.com"
+		}); 
 	}
 
 	function upload_file() {

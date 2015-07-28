@@ -154,6 +154,3 @@ class Transcoder:
         pass
 
 
-app = X100HTTP()
-app.upload("/upload", Transcoder)
-app.run("0.0.0.0", 80)
