@@ -36,16 +36,16 @@ VideoStack开发完成了吗？
 2. 在后续的开发中，我们会仔细考虑旧版本API的兼容问题，尽量不破坏它。
 
 
-如何最快速体验一下VideoStack？
------------------------------
+如何体验VideoStack？
+-------------------
 
-1. 你可以在http://demo.videostack.org 看到演示并操作一个小的VideoStack集群；
+1. 可以在http://demo.videostack.org 看到演示并操作一个小的VideoStack集群；
 
 2. 用户名密码都是videostack，每天会重置到初始状态；
 
 
-安装VideoStack我需要做什么？
----------------------------
+如何安装VideoStack？
+-------------------
 
 
 使用手册在哪？
