@@ -33,7 +33,7 @@ def create_request_info(**kwargs):
         info += k + '=' + v + '&'
     return info
 
-def target_file(release_dir, filename, file_type):
+def get_target_file(release_dir, filename, file_type):
 
     md5_str = md5(filename)
 
