@@ -3,6 +3,7 @@ import logging
 import socketserver
 import os
 import sys
+import re
 
 
 class X100Logger:
@@ -10,7 +11,7 @@ class X100Logger:
     def __init__(self):
         self.logger = logging.getLogger()
         formatter = logging.Formatter(
-            '%(pathname)s - %(lineno)d - %(message)s')
+            "\n\n  Error:\n  line: %(lineno)d of %(pathname)s\n  %(message)s\n")
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
@@ -25,6 +26,7 @@ class X100Request:
         self.body = ""
         self.headers = dict()
         self.args = dict()
+        self.args_in_url = dict()
 
     def get_remote_ip(self):
         return self.remote_ip
@@ -44,6 +46,14 @@ class X100Request:
     def get_arg(self, key):
         if key in self.args:
             return self.args[key]
+        elif key in self.args_in_url:
+            return self.args_in_url[key]
+        else:
+            return ""
+
+    def get_arg_in_url(self, key):
+        if key in self.args_in_url:
+            return self.args_in_url[key]
         else:
             return ""
 
@@ -98,6 +108,7 @@ class X100HTTPServerHelper:
 
 class X100HTTPServer(BaseHTTPRequestHandler):
     routers_get = dict()
+    routers_get_regex = dict()
     routers_post = dict()
     routers_upload = dict()
     static_file_ext = frozenset(
@@ -128,7 +139,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
             self.upload_cls.upload_process(self._content_key, line)
         except:
             self.__class__.logger.logger.warning(
-                "upload_process() def exec error: " + str(sys.exc_info()[0]) )
+                "upload_process() def exec error. ", exc_info=True, stack_info=False)
             return
 
     def _handle_a_line(self, line):
@@ -185,7 +196,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 self.upload_cls.upload_start(req)
             except:
                 self.__class__.logger.logger.warning(
-                    "upload_start() def exec error: " + str(sys.exc_info()[0]) )
+                    "upload_start() def exec error. ", exc_info=True, stack_info=False)
                 self.send_error(500)
                 return
 
@@ -213,7 +224,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 response = self.make_x100response(response)
             except:
                 self.__class__.logger.logger.warning(
-                    "upload_finish() def exec error: " + str(sys.exc_info()[0]) )
+                    "upload_finish() def exec error. ", exc_info=True, stack_info=False)
                 self.send_error(500)
             else:
                 self.send_x100response(response)
@@ -234,7 +245,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                     response = self.make_x100response(response)
                 except:
                     self.__class__.logger.logger.warning(
-                        "post_handler() def exec error" + str(sys.exc_info()[0]))
+                        "post_handler() def exec error. ", exc_info=True, stack_info=False)
                     self.send_error(500)
                 else:
                     self.send_x100response(response)
@@ -264,12 +275,34 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 response = self.make_x100response(response)
             except:
                 self.__class__.logger.logger.warning(
-                    "get_handeler() def exec error: " + str(sys.exc_info()[0]))
+                    "get_handler() def exec error. ", exc_info=True, stack_info=False)
                 self.send_error(500)
             else:
                 self.send_x100response(response)
-        elif file_ext in self.__class__.static_file_ext:
-            if os.path.exists(file_basename):
+        else:
+            for patten in self.__class__.routers_get_regex:
+                result = patten.fullmatch(self.file_path_without_query_string)
+                if result:
+                    req = X100Request()
+                    req.remote_ip = self.address_string()
+                    if len(file_path) > 1:
+                        req.query_string = file_path[1]
+                    req.args = X100HTTPServerHelper.parse_query_string(
+                        req.query_string)
+                    req.args_in_url = result.groupdict()
+                    try:
+                        response = self.__class__.routers_get_regex[
+                            patten](req)
+                        response = self.make_x100response(response)
+                    except:
+                        self.__class__.logger.logger.warning(
+                            "regex_get_handler() def exec error. ", exc_info=True, stack_info=False)
+                        self.send_error(500)
+                    else:
+                        self.send_x100response(response)
+                    return
+
+            if file_ext in self.__class__.static_file_ext and os.path.exists(file_basename):
                 self.send_response(200)
                 self.send_header(
                     "Content-type", X100HTTPServerHelper.get_mime(self.path))
@@ -279,8 +312,6 @@ class X100HTTPServer(BaseHTTPRequestHandler):
                 f.close()
             else:
                 self.send_error(404)
-        else:
-            self.send_error(404)
 
 
 class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
@@ -291,16 +322,37 @@ class ForkingHTTPServer(socketserver.ForkingMixIn, HTTPServer):
 
 class X100HTTP:
 
+    def __init__(self):
+        self.logger = X100Logger()
+
     def set_upload_buf_size(self, buf_size):
         X100HTTPServer.upload_buf_size = buf_size
 
     def get(self, url, fn):
-        X100HTTPServer.routers_get[url] = fn
+        if url[:1] != '/':
+            self.logger.logger.warning("Route rule MUST begin with '/'.")
+            return
+        if '<' in url:
+            url_regex = url
+            pattern = url.replace('<', '(?P<')
+            special_chars = re.escape('+!@#$%^*()')
+            pattern = pattern.replace(
+                '>', '>[a-zA-Z0-9' + special_chars + ']+)')
+            prog = re.compile(pattern)
+            X100HTTPServer.routers_get_regex[prog] = fn
+        else:
+            X100HTTPServer.routers_get[url] = fn
 
     def post(self, url, fn):
+        if url[:1] != '/':
+            self.logger.logger.warning("Route rule MUST begin with '/'.")
+            return
         X100HTTPServer.routers_post[url] = fn
 
     def upload(self, url, upload_cls):
+        if url[:1] != '/':
+            self.logger.logger.warning("Route rule MUST begin with '/'.")
+            return
         X100HTTPServer.routers_upload[url] = upload_cls
 
     def run(self, ip, port):
