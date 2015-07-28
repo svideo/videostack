@@ -111,6 +111,7 @@ class X100HTTPServer(BaseHTTPRequestHandler):
     routers_get_regex = dict()
     routers_post = dict()
     routers_upload = dict()
+    routers_static = dict()
     static_file_ext = frozenset(
         ['ico', 'css', 'js', 'html', 'png', 'bmp', 'jpg'])
     upload_buf_size = 4096
@@ -305,12 +306,27 @@ class X100HTTPServer(BaseHTTPRequestHandler):
             if file_ext in self.__class__.static_file_ext and os.path.exists(file_basename):
                 self.send_response(200)
                 self.send_header(
-                    "Content-type", X100HTTPServerHelper.get_mime(self.path))
+                    "Content-type", X100HTTPServerHelper.get_mime(self.file_path_without_query_string))
                 self.end_headers()
                 f = open(file_basename, "rb", buffering=0)
-                self.wfile.write(f.readall())
+                os.sendfile(self.wfile.fileno(), f.fileno(), 0, 0)
                 f.close()
             else:
+                for patten in self.__class__.routers_static:
+                    result = patten.fullmatch(
+                        self.file_path_without_query_string)
+                    if result:
+                        static_file_path = self.__class__.routers_static[
+                            patten] + result.group(1).split('?')[0]
+                        if os.path.exists(static_file_path):
+                            self.send_response(200)
+                            self.send_header(
+                                "Content-type", X100HTTPServerHelper.get_mime(self.file_path_without_query_string))
+                            self.end_headers()
+                            f = open(static_file_path, "rb", buffering=0)
+                            os.sendfile(self.wfile.fileno(), f.fileno(), 0, 0)
+                            f.close()
+                            return
                 self.send_error(404)
 
 
@@ -324,6 +340,8 @@ class X100HTTP:
 
     def __init__(self):
         self.logger = X100Logger()
+        special_chars = re.escape('+!@#$%^*()')
+        self.special_chars = 'a-zA-Z0-9' + special_chars
 
     def set_upload_buf_size(self, buf_size):
         X100HTTPServer.upload_buf_size = buf_size
@@ -332,12 +350,11 @@ class X100HTTP:
         if url[:1] != '/':
             self.logger.logger.warning("Route rule MUST begin with '/'.")
             return
-        if '<' in url:
+        if '<' in url and '>' in url:
             url_regex = url
             pattern = url.replace('<', '(?P<')
-            special_chars = re.escape('+!@#$%^*()')
             pattern = pattern.replace(
-                '>', '>[a-zA-Z0-9' + special_chars + ']+)')
+                '>', '>[' + self.special_chars + ']+)')
             prog = re.compile(pattern)
             X100HTTPServer.routers_get_regex[prog] = fn
         else:
@@ -354,6 +371,14 @@ class X100HTTP:
             self.logger.logger.warning("Route rule MUST begin with '/'.")
             return
         X100HTTPServer.routers_upload[url] = upload_cls
+
+    def static(self, url_prefix, absolute_path):
+        if url_prefix[:1] != '/':
+            self.logger.logger.warning("Route rule MUST begin with '/'.")
+            return
+        pattern = url_prefix + "([" + self.special_chars + "\_\.]+)"
+        prog = re.compile(pattern)
+        X100HTTPServer.routers_static[prog] = absolute_path
 
     def run(self, ip, port):
         s = ForkingHTTPServer((ip, port), X100HTTPServer)

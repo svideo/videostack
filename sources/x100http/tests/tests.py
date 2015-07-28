@@ -105,6 +105,7 @@ class TestSimple(unittest.TestCase):
         app.get("/one_dir/<arg_first>_<arg_second>.py", regex_get)
         app.get("/<arg_first>_<arg_second>.py", regex_get_in_url)
         app.get("/one_dir/<arg_first>.py", regex_get_more_arg)
+        app.static("/static/test/", "tests/sta/")
         ConnectionHolder.p = Process(target=app.run, args=('127.0.0.1', 8080))
         ConnectionHolder.p.start()
 
@@ -117,7 +118,16 @@ class TestSimple(unittest.TestCase):
             url='http://127.0.0.1:8080/tests/test.html', method='GET')
         f = urllib.request.urlopen(req)
         self.assertEqual(f.status, 200)
+        self.assertEqual(f.info().get('Content-Type'), 'text/html')
         self.assertEqual(f.read().decode(), "this is test.html\n")
+
+    def test_static_simple(self):
+        req = urllib.request.Request(
+            url='http://127.0.0.1:8080/static/test/static_test.html', method='GET')
+        f = urllib.request.urlopen(req)
+        self.assertEqual(f.status, 200)
+        self.assertEqual(f.info().get('Content-Type'), 'text/html')
+        self.assertEqual(f.read().decode(), "this is test for static html\n")
 
     def test_get_root(self):
         req = urllib.request.Request(url='http://127.0.0.1:8080', method='GET')
