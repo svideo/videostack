@@ -45,7 +45,15 @@ class Transcoder:
         return
 
     def run_cmd_async(self, body):
-        self.stdin.write(body)
+        try:
+            self.stdin.write(body)
+        except:
+            request_info = create_request_info(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
+            res = http_callback(self.config['url']['update_video_status'], request_info)
+            self.log(res)
+            print("write body to handler error")
+            sys.exit(1)
+
         running = self.running()
         while running:
             line = self.stdout.read(-1)
@@ -150,4 +158,6 @@ class Transcoder:
         return
 
     def __del__(self):
-        pass
+        request_info = create_request_info(video_id=self.video_id, status='success', bitrate=str(self.bitrate))
+        res = http_callback(self.config['url']['update_video_status'], request_info)
+        self.log(res, self.video_id, 'update_video_status', None)
