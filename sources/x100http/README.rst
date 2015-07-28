@@ -1,8 +1,12 @@
+|
+
 NAME
 ====
 
-    x100http - WebFramework support customing file upload processing
+    x100http, web framework support customing file upload processing
 
+
+|
 
 SYNOPSIS
 ========
@@ -14,8 +18,8 @@ SYNOPSIS
 
     app = X100HTTP()
 
-    def hello_world(req):
-        remote_ip = req.get_remote_ip()
+    def hello_world(request):
+        remote_ip = request.get_remote_ip()
         response = "<html><body>hello, " + remote_ip + "</body></html>"
         return response
 
@@ -23,11 +27,15 @@ SYNOPSIS
     app.run("0.0.0.0", 8080)
 
 
+|
+
 DESCRIPTION
 ===========
 
     x100http is a lite webframework designed for processing HTTP file upload.
 
+
+|
 
 CLASS X100HTTP
 ==============
@@ -91,6 +99,8 @@ set_upload_buf_size(buf_size)
     ``upload_handler_class.upload_process()`` will be called to process the buffer every time when the buffer is full.
 
 
+|
+
 CLASS X100REQUEST
 =================
 
@@ -122,6 +132,8 @@ get_header(header_name)
     Return the header`s value of the ``header_name``, if any.
 
 
+|
+
 CLASS X100RESPONSE
 ==================
 
@@ -138,20 +150,48 @@ set_header(name, value)
     Set the HTTP header.
 
 
+|
+
+ROUTING
+=======
+
+    x100http route accept a url and a function/class.
+
+    There are three kind of routes - get, post and upload.
+
+.. code-block::
+
+    app.get("/get_imple", get_simple)
+    app.post("/post_simple", post_simple)
+    app.upload("/upload_simple", UploadClass)
+
+routing for HTTP GET can be more flexible like this:
+
+.. code-block::
+
+    app.get("/one_dir/<arg_first>_<arg_second>.py?abc=def", regex_get)
+
+
+|
+
 HTTP ERROR 500
 ==============
 
     visitor will get HTTP error "500" when the handler function of the url he visit raise an error or code something wrong.
 
 
+|
+
 SUPPORTED PYTHON VERSIONS
 =========================
 
-    x100http only supports python 3.3 or newer.
+    x100http only supports python 3.4 or newer.
 
 
-MORE EXAMPLES
-=============
+|
+
+EXAMPLES
+========
 
 get visitor ip
 --------------
@@ -162,8 +202,8 @@ get visitor ip
 
     app = X100HTTP()
 
-    def hello_world(req):
-        remote_ip = req.get_remote_ip()
+    def hello_world(request):
+        remote_ip = request.get_remote_ip()
         response = "<html><body>hello, " + remote_ip + "</body></html>"
         return response
 
@@ -179,7 +219,7 @@ post method route
 
     app = X100HTTP()
 
-    def index(req):
+    def index(request):
         response = "<html><body>" \
             + "<form name="abc" action="/form" method="post">" \
             + "<input type="text" name="abc" />" \
@@ -188,9 +228,9 @@ post method route
             + "</body></html>"
         return response
 
-    def post_handler(req):
-        remote_ip = req.get_remote_ip()
-        abc = req.get_arg('abc')
+    def post_handler(request):
+        remote_ip = request.get_remote_ip()
+        abc = request.get_arg('abc')
         response = "hello, " + remote_ip + " you typed: " + abc
         return response
 
@@ -207,13 +247,13 @@ process file upload
 
     class UploadHandler:
 
-        def upload_start(self, req):
+        def upload_start(self, request):
             self.content = "start"
 
         def upload_process(self, key, line):
             self.content += line.decode()
 
-        def upload_finish(self, req):
+        def upload_finish(self, request):
             return "upload succ, content = " + self.content
 
     app = X100HTTP()
@@ -225,10 +265,10 @@ set http header
 
 .. code-block::
 
-    from x100http import X100HTTP
+    from x100http import X100HTTP, X100Response
 
-    def get_custom_header(req):
-        remote_ip = req.get_remote_ip()
+    def get_custom_header(request):
+        remote_ip = request.get_remote_ip()
         response = X100Response()
         response.set_header("X-My-Header", "My-Value")
         response.set_body("<html><body>hello, " + remote_ip + "</body></html>")
@@ -236,4 +276,21 @@ set http header
 
     app = X100HTTP()
     app.upload("/", get_custom_header)
+    app.run("0.0.0.0", 8080)
+
+more flexible routing
+---------------------
+
+.. code-block::
+
+    from x100http import X100HTTP
+
+    def regex_get(request):
+        first = request.get_arg("arg_first")
+        second = request.get_arg("arg_second")
+        abc = request.get_arg("abc")
+        return "hello, " + first + second + abc
+
+    app = X100HTTP()
+    app.get("/one_dir/<arg_first>_<arg_second>.py?abc=def", regex_get)
     app.run("0.0.0.0", 8080)

@@ -72,6 +72,20 @@ def post_simple(req):
 def post_urlencode(req):
     return "hello, world!" + req.get_arg('mykey')
 
+def regex_get(req):
+    arg_first = req.get_arg("arg_first")
+    arg_second = req.get_arg("arg_second")
+    return "regex_get: " + arg_first + ", " + arg_second
+
+def regex_get_in_url(req):
+    arg_first = req.get_arg_in_url("arg_first")
+    arg_second = req.get_arg_in_url("arg_second")
+    return "regex_get: " + arg_first + ", " + arg_second
+
+def regex_get_more_arg(req):
+    arg_first = req.get_arg("arg_first")
+    arg_second = req.get_arg("abc")
+    return "regex_get: " + arg_first + ", " + arg_second
 
 class TestSimple(unittest.TestCase):
 
@@ -88,6 +102,9 @@ class TestSimple(unittest.TestCase):
         app.post("/post_simple", post_simple)
         app.post("/post_urlencode", post_urlencode)
         app.upload("/upload_simple", UploadHandler)
+        app.get("/one_dir/<arg_first>_<arg_second>.py", regex_get)
+        app.get("/<arg_first>_<arg_second>.py", regex_get_in_url)
+        app.get("/one_dir/<arg_first>.py", regex_get_more_arg)
         ConnectionHolder.p = Process(target=app.run, args=('127.0.0.1', 8080))
         ConnectionHolder.p.start()
 
@@ -187,6 +204,25 @@ class TestSimple(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(
             r.text, "upload succ, content = startthis is test.html\n\r\n")
+
+    def test_regex_get(self):
+        resp = requests.get('http://127.0.0.1:8080/one_dir/hello_x100http.py')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.text, "regex_get: hello, x100http")
+
+    def test_regex_get_404(self):
+        resp = requests.get('http://127.0.0.1:8080/one_dir/hello_x100http.pl')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_regex_get_in_url(self):
+        resp = requests.get('http://127.0.0.1:8080/hello_x100http.py')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.text, "regex_get: hello, x100http")
+
+    def test_regex_get_more_arg(self):
+        resp = requests.get('http://127.0.0.1:8080/one_dir/hello.py?abc=def')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.text, "regex_get: hello, def")
 
 
 if __name__ == '__main__':
