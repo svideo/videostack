@@ -137,7 +137,8 @@
 
 	function get_m3u8_content() {
 		var m3u8_url = m3u8_hostname + '/interface/' + video_id + '_153.m3u8';
-		var player_url = player_hostname + '/' + 'play.html?play_url=' + m3u8_url
+		var player_url = player_hostname + '/' + 'play.html?play_url=' + m3u8_url;
+		var player_h5_url = player_hostname + '/' + 'play_h5.html?play_url=' + m3u8_url
 		$.ajax({
 			url: '',
 			type: "GET",
@@ -147,7 +148,7 @@
 					$('#m3u8_url').html(m3u8_url);
 					$('#show_player_url').show();
 					clearInterval(player_m3u8_interval_id);
-					create_qrcode(m3u8_url);
+					create_qrcode(player_h5_url);
 				}
 			}
 		});
@@ -159,14 +160,8 @@
 		console.log("uplod xxxxx success");
 	}
 
-	function create_qrcode(m3u8_url) {
-		$("#qrcode").qrcode({ 
-			render: "table",
-			width: 140,
-			height:140,
-			//text: url
-			text: m3u8_url
-		}); 
+	function create_qrcode(player_h5_url) {
+		$("#qrcode").qrcode(player_h5_url); 
 	}
 
 	function upload_file() {

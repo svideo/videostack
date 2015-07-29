@@ -1,0 +1,21 @@
+<!DOCTYPE hmtl>
+<html>
+    <head>
+        <title>x100speed html5</title>
+    </head>
+    <body>
+        <video controls autoplay >
+                <source id="m3u8" src="">
+        </video>
+        </body>
+</html>
+
+<script src="lib/jquery-2.1.4.min.js"></script>
+<script src="lib/x100toolkit.js"></script>
+<script>
+
+    $(document).ready(function(){
+        var play_url = getUrlParameter('play_url');
+        $('#m3u8').attr('src', play_url);
+    });
+</script>
