@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='x100http',
-    version='0.2.1',
+    version='0.2.3',
 
     description='WebFramework support customing file upload processing',
     long_description=open('README.rst').read(),
@@ -23,9 +23,9 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    keywords='http webframework file upload rfc1867 x100',
+    keywords='http framework webframework file upload rfc1867 x100',
 
-    packages=['tests'],
+    packages=['tests', 'tests/sta'],
     package_data = { '': ['*.html', '*.htm'], },
     py_modules=['x100http'],
     install_requires = ['requests>=2.7.0'],

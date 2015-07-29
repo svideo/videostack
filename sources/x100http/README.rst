@@ -68,8 +68,14 @@ post(url, handler_function)
 
     struct ``request`` (will explain below) will be passed to the handlder function when it is called.
 
+static(url_prefix, file_path)
+-----------------------------
+    set a route acl for static file
+
+    Static file request with ``url_prefix`` will be routing to the file in ``file_path``.
+
 upload(url, upload_handler_class)
-----------------------------------------------------------------------------------
+---------------------------------
     set a route acl of HTTP "POST" method with header "Content-Type: multipart/form-data".
 
     A new instance of class ``upload_handler_class`` will be created when file upload start.
@@ -97,6 +103,29 @@ set_upload_buf_size(buf_size)
     the unit of ``buf_size`` is byte, default value is 4096 byte.
 
     ``upload_handler_class.upload_process()`` will be called to process the buffer every time when the buffer is full.
+
+
+|
+
+ROUTING
+=======
+
+    x100http route accept a url and a function/class/path.
+
+    There are three four of routes - get, post, static and upload.
+
+.. code-block::
+
+    app.get("/get_imple", get_simple)
+    app.post("/post_simple", post_simple)
+    app.upload("/upload_simple", UploadClass)
+    app.static("/static/test/", "/tmp/sta/")
+
+routing for HTTP GET can be more flexible like this:
+
+.. code-block::
+
+    app.get("/one_dir/<arg_first>_<arg_second>.py?abc=def", regex_get)
 
 
 |
@@ -148,28 +177,6 @@ set_header(name, value)
 -----------------------
 
     Set the HTTP header.
-
-
-|
-
-ROUTING
-=======
-
-    x100http route accept a url and a function/class.
-
-    There are three kind of routes - get, post and upload.
-
-.. code-block::
-
-    app.get("/get_imple", get_simple)
-    app.post("/post_simple", post_simple)
-    app.upload("/upload_simple", UploadClass)
-
-routing for HTTP GET can be more flexible like this:
-
-.. code-block::
-
-    app.get("/one_dir/<arg_first>_<arg_second>.py?abc=def", regex_get)
 
 
 |
