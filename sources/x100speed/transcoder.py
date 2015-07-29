@@ -5,7 +5,6 @@ from x100.x100config import load_config
 from x100.x100util import *
 from x100.x100request import http_callback, update_video_status
 from x100http import X100HTTP, X100Response
-#from transcoder import Transcoder
 
 class Transcoder:
     def __init__(self):
@@ -67,7 +66,7 @@ class Transcoder:
                     logging.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
                     continue
 
-                request_info = self.segment_request_info(target_file, ts_file_index)
+                request_info = self.segment_request_info(target_file, storage_path, ts_file_index)
                 add_video_segment_url = self.config['url']['add_video_segment']
 
                 res = http_callback( add_video_segment_url, request_info)
@@ -94,13 +93,13 @@ class Transcoder:
         os.remove(flvfile)
         return retcode
 
-    def segment_request_info(self, filepath, file_index):
+    def segment_request_info(self, filepath, storage_path, file_index):
         create_time  = file_create_time(filepath)
         filesize     = str(file_size(filepath))
         bitrate      = str(self.bitrate)
         video_id     = self.video_id
         hostname     = self.config['base']['hostname']
-        storage_path = filepath
+        storage_path = storage_path
         frame_count  = self.config['segment']['fps_count']
         fragment_id  = file_index
 
@@ -152,5 +151,3 @@ class Transcoder:
 
     def __del__(self):
         pass
-
-

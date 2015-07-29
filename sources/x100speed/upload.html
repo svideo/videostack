@@ -1,124 +1,218 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <title>上传视频</title>
-  <link href="lib/bootstrap.min.css" rel="stylesheet">
-  <link href="css/x100speed.css" rel="stylesheet">
-</head>
-<body>
-  
-<div class="container">
-<nav class="navbar navbar-default navbar-fixed-top" style="border-top:2px solid #f06923;">
-  <div class="container">
-    <div class="navbar-header">
-      <a class="navbar-brand" style="color: #333; text-shadow: 0 1px 3px rgba(0,0,0,.5);" href="/"><em>x100Speed-Transcode</em></a>
+  <head>
+    <meta charset="utf-8">
+    <title>上传视频</title>
+    <link href="lib/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/x100speed.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="container">
+    <nav class="navbar navbar-default navbar-fixed-top" style="border-top:2px solid #f06923;">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" style="color: #333; text-shadow: 0 1px 3px rgba(0,0,0,.5);" href="/"><em>x100Speed-Transcode</em></a>
+        </div>
+        <div id="navbar" class="navbar-collapse navbar-right">
+          <a class="navbar-brand" href="upload.html" style="color: #f06923;font-size: 16px">上传视频</a>
+          <a class="navbar-brand" href="play.html" style="font-size: 16px">播放视频</a>
+        </div>
       </div>
-      <div id="navbar" class="navbar-collapse navbar-right">
-      <a class="navbar-brand" href="upload.html" style="color: #f06923;font-size: 16px">上传视频</a>
-      <a class="navbar-brand" href="play.html" style="font-size: 16px">播放视频</a>
+    </nav>
     </div>
-  </div>
-</nav>
-</div>
 
-<div class="container" style="margin-top: 200px;">
-<div class="row">
-  <div class="col-md-6 col-md-offset-3">
-    <h1>上传视频<h1>
-    <form class="form-inline" id="upload-form" action="" method="post" enctype="multipart/form-data">
-    <input type="file" class="form-control input-lg" name="upload" id="upload" />
-    <input type="submit" id="upload" class="btn btn-default btn-lg" value="上传" /> 
-    </form>
-    <progress value="0" min="0" max="100" id="uploadprogress"></progress>
-  </div>
-</div>
-</div>
+	<div class="container" style="margin-top: 200px;">
+		<div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<h1>上传视频<h1>
+						<form class="form-inline" id="upload-form" action="" method="post" enctype="multipart/form-data">
+							<input type="file" class="form-control input-lg" name="upload" id="upload" />
+							<input type="submit" id="upload" class="btn btn-default btn-lg" value="上传" /> 
+						</form>
+						<progress value="0" min="0" max="100" id="uploadprogress"></progress>
+			 </div>
+		</div>
+	</div>
 
-<div style="display:none"><img class="progress_img img-responsive" style="float:left;max-width:50px" src=""></div>
+	<div class="row">
+		<div class="col-xs-12 myimg" >
+		</div>
+	</div>
 
-</body>
+	<div style="display:none">
+		<img class="progress_img img-responsive" style="float:left;max-width:80px;position:relative" src="">
+	</div>
+
+
+	<div style="display:none" id="show_player_url">
+		<div class="row">
+			<div class="col-offset-xs-4 col-xs-8">
+				播放地址: <a id="m3u8_url" href="#"></a>
+			</div>
+		</div> <!-- row -->
+	</div> <!-- show_player_url -->
+
+	<div id="qrcode"></div>
+
+  </body>
 </html>
 
-<script src="lib/jquery-1.11.3.min.js"></script>
+<script src="lib/jquery-2.1.4.min.js"></script>
+<script src="lib/jquery.qrcode.min.js"></script>
 <script type="text/javascript">
-  function new_snap() {
-    $.get("img.txt", function(data){
-        console.log(data);
-        if(data!="") {
-        if (img_count >= 14) {
-        $(".progress_img:first").remove();
-        }
-        var new_img_node = $(".progress_img:first").clone();
-        $(new_img_node).attr("src", data);
-        $(new_img_node).hide();
-        $(".myimg").append($(new_img_node));
-        $(new_img_node).fadeIn("slow");
-        img_count += 1;
-        }
-        });
-  }
+	function upload_start() {
+		img_interval_id = setInterval(new_snap, 1500);
+		player_m3u8_interval_id = setInterval(get_m3u8_content, 10000); 
+		get_video_id();
+	}
 
-function upload_start() {
-  img_interval_id = setInterval(new_snap, 1000);
-  uploadfile();
-}
+	function new_snap() {
+		var snap_url_api = "http://10.221.193.64/interface/get_video_new_snap_image?video_id=" + video_id
+		$.get(snap_url_api, function(data){
+				console.log(data);
+				if(data!="" && data.image_url != last_snap) {
+				  last_snap = data.image_url;
+				  if (img_count >= 8) {
+					$(".progress_img:first").remove();
+				  }
+				  var new_img_node = $(".progress_img:first").clone();
+				  
+				  $(new_img_node).attr("src", "http://" + upload_ip + data.image_url);
+				  $(new_img_node).hide();
+				  $(".myimg").append($(new_img_node));
+				  $(new_img_node).fadeIn("slow");
+				  img_count += 1;
+				}
+			}, "json");
+	}
+	
+	function update_progress(e) {
+		if(e.lengthComputable) {
+			var max = e.total;
+			var current = e.loaded;
 
-function update_progress(e) {
-  if(e.lengthComputable) {
-    var max = e.total;
-    var current = e.loaded;
+			var percent = (current / max * 100 | 0);
+			if (percent < 100) {
+				$('#uploadprogress').attr("value", percent);
+			}
+		} 
+	}
 
-    var percent = (current / max * 100 | 0);
-    if (percent <= 99) {
-      $('#uploadprogress').attr("value", percent);
-    }
-  } 
-}
+	function get_video_id() {
+		$.ajax({
+			url: 'http://10.221.193.64/interface/get_video_id',
+			type: "GET",
+			dataType: "json",
+			timeout: 1000,
+			success: function (data) {
+				console.log(data)
+				if (data.status === 'failed') { //failed
+					stop_all_timer();
+					alert(data.message); // machine is busy, stop upload
+				}
+				else { 
+					video_id = data.video_id
+					upload_ip = data.ip
+					console.log(video_id);
+					console.log(upload_ip)
+					upload_file();
+				}
+			},
+			error: function (x, t, m) {
+				if(t==="timeout") {
+					console.log("api got timeout");
+				} else {
+					console.log(t);
+				}
+				stop_all_timer();
+			}
+		});
+	}
+		
+	function stop_all_timer() {
+		clearInterval(img_interval_id);
+		clearInterval(player_m3u8_interval_id);
+	}
 
-function success_upload(e) {
-  $('#uploadprogress').attr("value", 100);
-  clearInterval(img_interval_id);
-  console.log("uplod xxxxx success");
-}
+	function get_m3u8_content() {
+		var m3u8_url = m3u8_hostname + '/interface/' + video_id + '_153.m3u8';
+		var player_url = player_hostname + '/' + 'play.html?play_url=' + m3u8_url
+		$.ajax({
+			url: '',
+			type: "GET",
+			success: function (data) {
+				if (data != "") {
+					$('#m3u8_url').attr("href", player_url);
+					$('#m3u8_url').html(m3u8_url);
+					$('#show_player_url').show();
+					clearInterval(player_m3u8_interval_id);
+					create_qrcode(m3u8_url);
+				}
+			}
+		});
+	}
 
-function uploadfile() {
-  var formdata = new FormData();		
-  formdata.append('upload', $('#upload')[0].files[0]);
-  $.ajax({
-    type: "POST",		
-    url : "http://www.speed.com/action.php",
-    data: formdata,
-    xhr: function() {
-    var myxhr = $.ajaxSettings.xhr();
-    if(myxhr.upload){
-    myxhr.upload.addEventListener('progress',update_progress, false);
-    myxhr.upload.addEventListener('load', success_upload, false);
-    }
-    return myxhr;
-    },
-    cache: false,
-    contentType: false,
-    processData: false,
-    success: function(data) {
-    console.log("upload success");	
-    },
-    error: function(data) {
-    console.log("upload error");			
-    }
-  });
-  console.log("uploadfile");			
-}
+	function success_upload(e) {
+		$('#uploadprogress').attr("value", 100);
+		clearInterval(img_interval_id);
+		console.log("uplod xxxxx success");
+	}
 
-$("form").submit( function () {
-    upload_start();
-    return false;
-});
+	function create_qrcode(m3u8_url) {
+		$("#qrcode").qrcode({ 
+			render: "table",
+			width: 140,
+			height:140,
+			//text: url
+			text: m3u8_url
+		}); 
+	}
 
-var img_count = 0;
-var img_interval_id;
+	function upload_file() {
+		var formdata = new FormData();		
+		formdata.append('video_id', video_id);
+		formdata.append('upload', $('#upload')[0].files[0]);
 
-$(document).ready(function(){ 
-});
+		$.ajax({
+			type: "POST",		
+			url : "/upload",
+			data: formdata,
+			xhr: function() {
+				var myxhr = $.ajaxSettings.xhr();
+				if(myxhr.upload){
+					myxhr.upload.addEventListener('progress',update_progress, false);
+					myxhr.upload.addEventListener('load', success_upload, false);
+				}
+				return myxhr;
+			},
+			cache: false,
+			contentType: false,
+			processData: false,
+			success: function(data) {
+				console.log("upload success");	
+			},
+			error: function(data) {
+				console.log("upload error");			
+			}
+		});
 
+		console.log("uploadfile");			
+	}
+
+	$("form").submit( function () {
+		upload_start();
+		return false;
+	});
+
+	var img_count = 0;
+	var img_interval_id;
+	var video_id  = undefined;
+	var last_snap = undefined; 
+	var player_hostname = 'http://10.221.193.64:8080';
+	var m3u8_hostname = 'http://10.221.193.64';
+	var player_m3u8_interval_id;
+	var upload_ip;
+	$(document).ready(function(){ 
+			});
 </script>
