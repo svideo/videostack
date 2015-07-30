@@ -86,6 +86,9 @@ class Transcoder:
                 snap_index    = snap_re.group(2)
                 snap_filename = snap_img_file.split('/')[-1]
                 (target_file, storage_path) = get_target_file(self.config['storage']['release_dir'], snap_filename, 'snap')
+                print("++++++++++++++++++++storage_path+++++++++++++++++++")
+                print(storage_path)
+                print("++++++++++++++++++++++++++++++++++++++++++++++++++")
 
                 shutil.move(snap_img_file, target_file)
 

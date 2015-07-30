@@ -78,7 +78,7 @@
 				  }
 				  var new_img_node = $(".progress_img:first").clone();
 				  
-				  $(new_img_node).attr("src", "http://" + upload_ip + data.image_url);
+				  $(new_img_node).attr("src", "http://" + '10.221.193.64' + data.image_url);
 				  $(new_img_node).hide();
 				  $(".myimg").append($(new_img_node));
 				  $(new_img_node).fadeIn("slow");
@@ -204,7 +204,7 @@
 	var img_interval_id;
 	var video_id  = undefined;
 	var last_snap = undefined; 
-	var player_hostname = 'http://10.221.193.64:8080';
+	var player_hostname = 'http://10.221.193.64';
 	var m3u8_hostname = 'http://10.221.193.64';
 	var player_m3u8_interval_id;
 	var upload_ip;

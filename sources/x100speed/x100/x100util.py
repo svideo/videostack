@@ -46,7 +46,7 @@ def get_target_file(release_dir, filename, file_type):
         os.makedirs(target_dir)
 
     target_filename = target_dir + '/' + filename
-    storage_path    = '/' + dir1 + '/' + dir2 + '/' + dir3 + '/' + filename
+    storage_path    = '/'+ file_type +'/'+ dir1 +'/'+ dir2 +'/'+ dir3 +'/'+ filename
 
     target_filename = target_filename.replace('.flv', '.ts')
     storage_path    = storage_path.replace('.flv', '.ts')

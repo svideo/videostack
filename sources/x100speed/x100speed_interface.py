@@ -210,7 +210,7 @@ def get_video_new_snap_image(request):
     dir_second    = string_hash[3:6]
     dir_third     = string_hash[6:9]
     #image_url     = 'http://' + ip + '/' + dir_first + '/' + dir_second + '/' + dir_third + '/' +  video_id + '_' + snap_count + '.jpg'
-    image_url     = '/' + dir_first + '/' + dir_second + '/' + dir_third + '/' +  video_id + '_' + snap_count + '.jpg'
+    image_url     = '/snap' + '/' + dir_first + '/' + dir_second + '/' + dir_third + '/' +  video_id + '_' + snap_count + '.jpg'
 
     response.set_body('{"status":"success", "message":"", "image_url":"' + image_url + '"}')
     return response
