@@ -312,7 +312,8 @@ def video_play_child(request):
     
     response.set_header("Access-Control-Allow-Origin", "*")
     response.set_header("Access-Control-Allow-Methods", "GET")
-    response.set_header("Content-Type", "application/vnd.apple.mpegurl")
+    #response.set_header("Content-Type", "application/vnd.apple.mpegurl")
+    response.set_header("Content-Type", "application/x-mpegurl")
 
     r   = redis_connect()
     ret = r.hget('x100speed_hash_videoid', video_id)
@@ -364,10 +365,10 @@ def video_play_child(request):
         video_m3u8_tmp += "\n"
     
     video_m3u8 += "#EXTM3U\n"
-    video_m3u8 += "#EXT-X-VERSION:5\n"
-    video_m3u8 += "#EXT-X-TARGETDURATION:" + str(max_fragment_duration) + "\n"
-    video_m3u8 += "#EXT-X-MEDIA-SEQUENCE:" + video_m3u8_sequence + "\n"
+    video_m3u8 += "#EXT-X-VERSION:3\n"
+    video_m3u8 += "#EXT-X-TARGETDURATION:" + str(int(max_fragment_duration)) + "\n"
     video_m3u8 += "#EXT-X-ALLOW-CACHE:YES\n"
+    video_m3u8 += "#EXT-X-MEDIA-SEQUENCE:" + video_m3u8_sequence + "\n"
     video_m3u8 += video_m3u8_tmp
 
     if play_type == "vod":
