@@ -6,11 +6,24 @@ from x100.x100util import *
 from x100.x100request import http_callback, update_video_status
 from x100http import X100HTTP, X100Response
 
+class TranscodeLogger:
+    def __init__(self, logfile):
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.INFO)
+
+        handler = logging.FileHandler(logfile)
+        handler.setLevel(logging.INFO)
+
+        formatter = logging.Formatter('[%(levelname)s]  %(asctime)s  %(name)s  %(message)s')
+        handler.setFormatter(formatter)
+
+        self.logger.addHandler(handler)
+
 class Transcoder:
     def __init__(self):
         self.config = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
-        self._init_log_config()
+        self.logger = TsLogger(self.config['log']['path']).logger
 
     def upload_start(self, req):
         print("hello")
@@ -67,7 +80,7 @@ class Transcoder:
 
                 retcode = self.flv2ts(ts_file, target_file)
                 if retcode != 0:
-                    logging.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
+                    self.logger.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
                     continue
 
                 request_info = self.segment_request_info(target_file, storage_path, ts_file_index)
@@ -150,11 +163,9 @@ class Transcoder:
 
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':
-            self.logging.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
-            #print("INFO: video_id: %s snap: %s callbackApi: %s success" % (video_id, filename, apiname))
+            self.logger.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
         else:
-            self.logging.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
-            #print("ERROR: video_id:%s snap: %s callbackApi: %s  error: %s" % (video_id, filename, apiname, response['message']) )
+            self.logger.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
         return
 
     def __del__(self):
