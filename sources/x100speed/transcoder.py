@@ -163,9 +163,9 @@ class Transcoder:
 
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':
-            self.loggers.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
+            self.loggers.info("[video_id] %s [snap] %s [callbackApi] %s success", video_id, filename, apiname)
         else:
-            self.loggers.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
+            self.loggers.error("[video_id] %s [snap] %s [callbackApi] %s  error: %s", video_id, filename, apiname, response['message'])
         return
 
     def __del__(self):
