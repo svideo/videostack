@@ -23,7 +23,7 @@ class Transcoder:
     def __init__(self):
         self.config = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
-        self.loggers = TranscoderLogger(self.config['log']['path']).logger
+        self.logger = TranscoderLogger(self.config['log']['path']).logger
 
     def upload_start(self, req):
         print("hello")
@@ -59,8 +59,6 @@ class Transcoder:
         except:
             request_info = create_request_info(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
-            #self.log(res)
-            print("write body to handler error")
             sys.exit(1)
 
         running = self.running()
@@ -80,7 +78,7 @@ class Transcoder:
 
                 retcode = self.flv2ts(ts_file, target_file)
                 if retcode != 0:
-                    self.loggers.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
+                    self.logger.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
                     continue
 
                 request_info = self.segment_request_info(target_file, storage_path, ts_file_index)
@@ -140,14 +138,22 @@ class Transcoder:
         vbitrate = self.config['segment']['vbitrate']
         abitrate = self.config['segment']['abitrate']
         segment_time = self.config['segment']['time']
+        fps       = self.config['segment']['fps']
+        scale     = self.config['segment']['scale']
+        vcodec    = self.config['segment']['vcodec']
+        acodec    = self.config['segment']['acodec'].strip('"')
+        img_fps   = self.config['snap']['fps']
+        img_scale = self.config['snap']['scale']
+
+
         cmd = ""
         cmd += "ffmpeg -v verbose -i -"
         cmd += " -filter_complex \""
-        cmd += " [0:v:0]fps=15,scale=352:288,split=2[voutA][vtmpB],"
-        cmd += " [vtmpB]fps=0.5,scale=176:144[voutB],[0:a:0]asplit=1[aoutA]"
+        cmd += " [0:v:0]fps=" + fps + ",scale=" + scale + ",split=2[voutA][vtmpB],"
+        cmd += " [vtmpB]fps=" + img_fps + ",scale=" + img_scale + "[voutB],[0:a:0]asplit=1[aoutA]"
         cmd += "\" "
-        cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts bitrate=450:no-8x8dct:bframes=0:no-cabac:weightp=0:no-mbtree:me=dia:no-mixed-refs:partitions=i8x8,i4x4:rc-lookahead=0:ref=1:subme=1:trellis=0"
-        cmd += " -c:a libfdk_aac -profile:a aac_he -b:a 16k -f segment -segment_format flv -segment_time 10"
+        cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts " + vcodec
+        cmd += " -c:a " + acodec + "-f segment -segment_format flv -segment_time " + segment_time
         cmd += " -y "+ tmp_ts_name +" -map [voutB] -y " + tmp_snap_name + " 2>&1"
 
         if cmd is not None:
@@ -163,9 +169,9 @@ class Transcoder:
 
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':
-            self.loggers.info("[video_id] %s [snap] %s [callbackApi] %s success", video_id, filename, apiname)
+            self.logger.info("[video_id] %s [snap] %s [callbackApi] %s success", video_id, filename, apiname)
         else:
-            self.loggers.error("[video_id] %s [snap] %s [callbackApi] %s  error: %s", video_id, filename, apiname, response['message'])
+            self.logger.error("[video_id] %s [snap] %s [callbackApi] %s  error: %s", video_id, filename, apiname, response['message'])
         return
 
     def __del__(self):
