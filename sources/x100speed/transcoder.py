@@ -10,7 +10,7 @@ class Transcoder:
     def __init__(self):
         self.config = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
-        self._log_config()
+        self._init_log_config()
 
     def upload_start(self, req):
         print("hello")
@@ -28,11 +28,7 @@ class Transcoder:
             self.run_cmd_async(line)
 
     def upload_finish(self,req):
-        print("abcdefgh_done")
         return "your file uploaded."
-
-    def _log_config(self):
-        logging.basicConfig(level=logging.INFO)
 
     def init_popen_handler(self):
         cmd = self.build_cmd(self.video_id)
@@ -50,7 +46,7 @@ class Transcoder:
         except:
             request_info = create_request_info(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
-            self.log(res)
+            #self.log(res)
             print("write body to handler error")
             sys.exit(1)
 
@@ -86,9 +82,6 @@ class Transcoder:
                 snap_index    = snap_re.group(2)
                 snap_filename = snap_img_file.split('/')[-1]
                 (target_file, storage_path) = get_target_file(self.config['storage']['release_dir'], snap_filename, 'snap')
-                print("++++++++++++++++++++storage_path+++++++++++++++++++")
-                print(storage_path)
-                print("++++++++++++++++++++++++++++++++++++++++++++++++++")
 
                 shutil.move(snap_img_file, target_file)
 
@@ -151,13 +144,17 @@ class Transcoder:
 
         return cmd
 
+    def _init_log_config(self):
+        logging.basicConfig(filename=self.config['log']['path'],level=logging.DEBUG)
+        self.logging =  logging
+
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':
-            logging.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
-            print("INFO: video_id: %s snap: %s callbackApi: %s success" % (video_id, filename, apiname))
+            self.logging.info("video_id: %s snap: %s callbackApi: %s success", video_id, filename, apiname)
+            #print("INFO: video_id: %s snap: %s callbackApi: %s success" % (video_id, filename, apiname))
         else:
-            logging.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
-            print("ERROR: video_id:%s snap: %s callbackApi: %s  error: %s" % (video_id, filename, apiname, response['message']) )
+            self.logging.error("video_id:%s snap: %s callbackApi: %s  error: %s", video_id, filename, apiname, response['message'])
+            #print("ERROR: video_id:%s snap: %s callbackApi: %s  error: %s" % (video_id, filename, apiname, response['message']) )
         return
 
     def __del__(self):
