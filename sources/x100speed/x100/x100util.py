@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import hashlib, os, sys
+import hashlib, os, sys, subprocess
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK
 
@@ -27,7 +27,7 @@ def non_blocking_handler(handler):
     fcntl(handler, F_SETFL, flags | O_NONBLOCK)
     return handler
 
-def create_request_info(**kwargs):
+def request_info_serialize(**kwargs):
     info = ""
     for k, v in kwargs.items():
         info += k + '=' + v + '&'
@@ -51,3 +51,9 @@ def get_target_file(release_dir, filename, file_type):
     target_filename = target_filename.replace('.flv', '.ts')
     storage_path    = storage_path.replace('.flv', '.ts')
     return (target_filename, storage_path)
+
+def flv2ts(flvfile, tsfile):
+    flv2ts_cmd = cmd = "ffmpeg -i " + flvfile +" -c copy -bsf:v h264_mp4toannexb -y "+ tsfile +" &> /dev/null"
+    retcode = subprocess.check_call(flv2ts_cmd, shell=True)
+    os.remove(flvfile)
+    return retcode

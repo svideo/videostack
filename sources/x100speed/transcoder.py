@@ -34,7 +34,7 @@ class Transcoder:
             self.video_id = video_id
             self.init_popen_handler()
 
-            request_info = create_request_info(video_id=self.video_id, status='proceed', bitrate=str(self.bitrate))
+            request_info = request_info_serialize(video_id=self.video_id, status='proceed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
             self.log(res, self.video_id, 'update_video_status', None)
         elif key == b'upload':
@@ -57,9 +57,10 @@ class Transcoder:
         try:
             self.stdin.write(body)
         except:
-            request_info = create_request_info(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
+            request_info = request_info_serialize(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
-            sys.exit(1)
+            self.log(res, self.video_id, 'update_video_status', None)
+            return 1
 
         running = self.running()
         while running:
@@ -76,7 +77,7 @@ class Transcoder:
 
                 (target_file, storage_path) = get_target_file(self.config['storage']['release_dir'], ts_filename, 'ts')
 
-                retcode = self.flv2ts(ts_file, target_file)
+                retcode = flv2ts(ts_file, target_file)
                 if retcode != 0:
                     self.logger.error("flv2ts flvfile: %s tsfile: %s failed", ts_file, target_file)
                     continue
@@ -96,17 +97,11 @@ class Transcoder:
 
                 shutil.move(snap_img_file, target_file)
 
-                info = create_request_info(video_id=self.video_id, snap_image_count=snap_index)
+                info = request_info_serialize(video_id=self.video_id, snap_image_count=snap_index)
 
                 res  = http_callback(self.config['url']['update_video_snap_image_count'], info)
                 self.log(res, self.video_id, 'update_video_snap_image_count', storage_path)
         return
-
-    def flv2ts(self, flvfile, tsfile):
-        flv2ts_cmd = cmd = "ffmpeg -i " + flvfile +" -c copy -bsf:v h264_mp4toannexb -y "+ tsfile +" &> /dev/null"
-        retcode = subprocess.check_call(flv2ts_cmd, shell=True)
-        os.remove(flvfile)
-        return retcode
 
     def segment_request_info(self, filepath, storage_path, file_index):
         create_time  = file_create_time(filepath)
@@ -118,7 +113,7 @@ class Transcoder:
         frame_count  = self.config['segment']['fps_count']
         fragment_id  = file_index
 
-        req_info     = create_request_info(
+        req_info     = request_info_serialize(
                             video_id=self.video_id, hostname=self.config['base']['hostname'],\
                             storage_path=storage_path, frame_count=self.config['segment']['fps_count'],\
                             file_size=str(filesize), fragment_id=file_index, bitrate=str(bitrate),\
@@ -145,7 +140,6 @@ class Transcoder:
         img_fps   = self.config['snap']['fps']
         img_scale = self.config['snap']['scale']
 
-
         cmd = ""
         cmd += "ffmpeg -v verbose -i -"
         cmd += " -filter_complex \""
@@ -163,10 +157,6 @@ class Transcoder:
 
         return cmd
 
-    def _init_log_config(self):
-        logging.basicConfig(filename=self.config['log']['path'],level=logging.DEBUG)
-        self.logging =  logging
-
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':
             self.logger.info("[video_id] %s [snap] %s [callbackApi] %s success", video_id, filename, apiname)
@@ -175,6 +165,6 @@ class Transcoder:
         return
 
     def __del__(self):
-        request_info = create_request_info(video_id=self.video_id, status='success', bitrate=str(self.bitrate))
+        request_info = request_info_serialize(video_id=self.video_id, status='success', bitrate=str(self.bitrate))
         res = http_callback(self.config['url']['update_video_status'], request_info)
         self.log(res, self.video_id, 'update_video_status', None)
