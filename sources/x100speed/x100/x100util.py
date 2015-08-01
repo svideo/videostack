@@ -2,6 +2,7 @@
 import hashlib, os, sys, subprocess
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK
+from x100.x100config import load_config
 
 def md5(filename):
     m = hashlib.md5()
@@ -57,3 +58,38 @@ def flv2ts(flvfile, tsfile):
     retcode = subprocess.check_call(flv2ts_cmd, shell=True)
     os.remove(flvfile)
     return retcode
+
+def build_cmd(video_id):
+    config = load_config('conf/transcoder.conf')
+    storage_dir = config['storage']['dir']
+    if not os.path.exists(storage_dir):
+        os.makedirs(storage_dir)
+
+    tmp_ts_name = storage_dir + '/' + video_id + "_%d.flv"
+    tmp_snap_name = storage_dir + '/' + video_id + "_%d.jpg"
+    vbitrate = config['segment']['vbitrate']
+    abitrate = config['segment']['abitrate']
+    segment_time = config['segment']['time']
+    fps       = config['segment']['fps']
+    scale     = config['segment']['scale']
+    vcodec    = config['segment']['vcodec']
+    acodec    = config['segment']['acodec'].strip('"')
+    img_fps   = config['snap']['fps']
+    img_scale = config['snap']['scale']
+
+    cmd = ""
+    cmd += "ffmpeg -v verbose -i -"
+    cmd += " -filter_complex \""
+    cmd += " [0:v:0]fps=" + fps + ",scale=" + scale + ",split=2[voutA][vtmpB],"
+    cmd += " [vtmpB]fps=" + img_fps + ",scale=" + img_scale + "[voutB],[0:a:0]asplit=1[aoutA]"
+    cmd += "\" "
+    cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts " + vcodec
+    cmd += " -c:a " + acodec + "-f segment -segment_format flv -segment_time " + segment_time
+    cmd += " -y "+ tmp_ts_name +" -map [voutB] -y " + tmp_snap_name + " 2>&1"
+
+    if cmd is not None:
+        cmd = cmd
+    else:
+        cmd = ""
+
+    return cmd
