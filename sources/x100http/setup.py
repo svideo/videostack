@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name='x100http',
-    version='0.2.3',
+    version='0.2.4',
 
-    description='WebFramework support customing file upload processing',
+    description='web framework support customing file upload processing',
     long_description=open('README.rst').read(),
     url='https://github.com/chengang/x100http',
     author='Chen Gang',
@@ -19,7 +19,6 @@ setup(
 
         'License :: OSI Approved :: MIT License',
 
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3 :: Only',
     ],
