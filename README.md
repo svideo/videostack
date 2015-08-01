@@ -1,4 +1,4 @@
-VideoStack：构建网络视频服务的开源软件
+VideoStack：构建视频云服务的开源软件
 ====================================
 
 
@@ -14,7 +14,6 @@ VideoStack是什么？
 4. 提供各平台上的浏览器视频播放，但不包括播放器软件或是播放App的实现；
 
 5. VideoStack可以通过后台Web管理界面或VideoStackAPI来控制；
-
 
 
 VideoStack开发方式是什么样的？
@@ -43,24 +42,28 @@ VideoStack开发完成了吗？
 2. 用户名密码都是videostack，每天凌晨重置至初始状态；
 
 
-如何安装VideoStack？
--------------------
+我需要做什么？
+-------------
+
+1. 准备好服务器和带宽，VideoStack只是一个软件；
+
+2. 按照http://www.videostack.org/install 的步骤部署VideoStack；
 
 
 使用手册在哪？
 -------------
 
-1. 设计文档 - http://docs.videostack.org/design  
+1. 设计文档 - http://www.videostack.org/design  
 
-2. API文档 - http://docs.videostack.org/api
+2. 安装手册 - http://www.videostack.org/install
 
-
+3. API文档 - http://www.videostack.org/api
 
 
 VideoStack使用了哪些开源／免费的软件项目？
 -----------------------------------------
 
-VideoStack使用了以下开源项目，我们对它们的编写者们表示由衷地感谢。
+VideoStack使用了以下开源项目，我们对它们的编写者们表示由衷感谢。
 
 FFmpeg - http://ffmpeg.org/  
 
@@ -68,3 +71,6 @@ Varnish - https://www.varnish-cache.org/
 
 Python - https://www.python.org/
 
+Redis - http://redis.io/
+
+MySQL - https://www.mysql.com/
