@@ -6,9 +6,9 @@ setup(
 
     description='interface for x100speed',
     long_description="",
-    url='',
+    url='https://github.com/laodifang',
     author='Ren Peng',
-    author_email='',
+    author_email='ithink.ren@gmail.com',
     license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
