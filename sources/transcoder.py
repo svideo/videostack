@@ -48,6 +48,7 @@ class Transcoder:
 
     def init_popen_handler(self):
         cmd = build_cmd(self.video_id)
+        print(cmd)
         self.logger.info("ffmpeg_cmd: %s" % cmd)
         p = subprocess.Popen(cmd, bufsize=0, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         self.stdout = p.stdout
@@ -61,7 +62,7 @@ class Transcoder:
         except:
             request_info = request_info_serialize(video_id=self.video_id, status='failed', bitrate=str(self.bitrate))
             res = http_callback(self.config['url']['update_video_status'], request_info)
-            self.log(res, self.video_id, 'update_video_status', None)
+            self.log(res, self.video_id, 'update_video_status', 'stdin.write error line 61')
             return 1
 
         running = self.running()
@@ -123,40 +124,6 @@ class Transcoder:
 
     def running(self):
         return self.poll is None
-
-    #def build_cmd(self, video_id):
-    #    storage_dir = self.config['storage']['dir']
-    #    if not os.path.exists(storage_dir):
-    #        os.makedirs(storage_dir)
-
-    #    tmp_ts_name = storage_dir + '/' + video_id + "_%d.flv"
-    #    tmp_snap_name = storage_dir + '/' + video_id + "_%d.jpg"
-    #    vbitrate = self.config['segment']['vbitrate']
-    #    abitrate = self.config['segment']['abitrate']
-    #    segment_time = self.config['segment']['time']
-    #    fps       = self.config['segment']['fps']
-    #    scale     = self.config['segment']['scale']
-    #    vcodec    = self.config['segment']['vcodec']
-    #    acodec    = self.config['segment']['acodec'].strip('"')
-    #    img_fps   = self.config['snap']['fps']
-    #    img_scale = self.config['snap']['scale']
-
-    #    cmd = ""
-    #    cmd += "ffmpeg -v verbose -i -"
-    #    cmd += " -filter_complex \""
-    #    cmd += " [0:v:0]fps=" + fps + ",scale=" + scale + ",split=2[voutA][vtmpB],"
-    #    cmd += " [vtmpB]fps=" + img_fps + ",scale=" + img_scale + "[voutB],[0:a:0]asplit=1[aoutA]"
-    #    cmd += "\" "
-    #    cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts " + vcodec
-    #    cmd += " -c:a " + acodec + "-f segment -segment_format flv -segment_time " + segment_time
-    #    cmd += " -y "+ tmp_ts_name +" -map [voutB] -y " + tmp_snap_name + " 2>&1"
-
-    #    if cmd is not None:
-    #        self.cmd = cmd
-    #    else:
-    #        self.cmd = ""
-
-    #    return cmd
 
     def log(self, response, video_id, apiname, filename):
         if response['status'] == 'success':

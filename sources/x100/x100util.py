@@ -84,7 +84,7 @@ def build_cmd(video_id):
     cmd += " [vtmpB]fps=" + img_fps + ",scale=" + img_scale + "[voutB],[0:a:0]asplit=1[aoutA]"
     cmd += "\" "
     cmd += " -map [voutA] -map [aoutA] -c:v libx264 -x264opts " + vcodec
-    cmd += " -c:a " + acodec + "-f segment -segment_format flv -segment_time " + segment_time
+    cmd += " -c:a " + acodec + " -f segment -segment_format flv -segment_time " + segment_time
     cmd += " -y "+ tmp_ts_name +" -map [voutB] -y " + tmp_snap_name + " 2>&1"
 
     if cmd is not None:
