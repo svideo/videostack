@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
 vagrant_box='/home/software/centos7_VirtualBoxVMs5.0.box'
-prefix_name='x100speed_transcode_'
+prefix_name='x100speed_transcode'
 create_date=`date +%Y%m%d-%H%M%S`
-ci_system_name=${prefix_name}${create_date}
+ci_system_name=${prefix_name}'_'${create_date}
+
+box_list=`vagrant box list |grep 100x100speed_transcode`
+echo $box_list
+if [ -z "$box_list" ]; then
+    vagrant box add $ci_system_name $vagrant_box
+fi
 
 #create ci system
-vagrant box add $ci_system_name $vagrant_box
 mkdir -p $ci_system_name
 cp x100speed_transcode_ci.sh $ci_system_name
 cd $ci_system_name

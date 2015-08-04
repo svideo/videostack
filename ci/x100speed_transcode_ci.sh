@@ -56,6 +56,11 @@ sudo redis-server /etc/redis.conf
 sleep 3
 
 #test x100speed
-cd 'x100speed_transcode/sources/x100speed'
+cd ./x100speed_transcode/sources
 #/usr/local/bin/python3 setup.py test
 sudo /usr/local/bin/python3 run.py
+
+sleep 3
+
+curl -L "http://10.221.193.64/interface/add_staff_ip?ip=10.221.193.64"
+curl -L "http://10.221.193.64/interface/update_staff_monitor?ip=10.221.193.64&process_count=0"
