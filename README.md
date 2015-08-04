@@ -37,7 +37,7 @@ VideoStack开发完成了吗？
 如何体验VideoStack？
 -------------------
 
-1. 可以在http://demo.videostack.org 看到演示并操作一个小的VideoStack集群；
+1. 可以在http://demo.videostack.org 看到演示并操作一个演示用的VideoStack集群；
 
 2. 用户名密码都是videostack，每天凌晨重置至初始状态；
 
@@ -45,7 +45,7 @@ VideoStack开发完成了吗？
 我需要做什么？
 -------------
 
-1. 准备好服务器和带宽，VideoStack只是一个软件；
+1. 准备好服务器和带宽；
 
 2. 按照http://www.videostack.org/install 的步骤部署VideoStack；
 
