@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from x100speed_interface.x100speed_interface import *
-from x100speed_transcoder.transcoder import Transcoder
+from interface.x100speed_interface import *
+from transcoder.transcoder import Transcoder
 from x100http import  X100HTTP, X100Response
 from x100daemon import Daemon
 
