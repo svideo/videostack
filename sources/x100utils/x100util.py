@@ -2,7 +2,7 @@
 import hashlib, os, sys, subprocess
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK
-from x100.x100config import load_config
+from x100utils.x100config import load_config
 
 def md5(filename):
     m = hashlib.md5()

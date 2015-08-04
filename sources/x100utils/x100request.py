@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import urllib
 import json
-from x100.x100util import request_info_serialize
+from x100utils.x100util import request_info_serialize
 
 def http_callback(url, info):
     request_url = url + '?' + info
