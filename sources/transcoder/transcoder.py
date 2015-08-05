@@ -4,7 +4,6 @@ import urllib.request
 from x100utils.x100config import load_config
 from x100utils.x100util import *
 from x100utils.x100request import http_callback, update_video_status
-#from x100http import X100HTTP, X100Response
 
 class TranscoderLogger:
     def __init__(self, logfile):
