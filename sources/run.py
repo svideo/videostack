@@ -4,9 +4,9 @@ from transcoder.transcoder import Transcoder
 from x100http import  X100HTTP, X100Response
 from x100daemon import Daemon
 
-pidfile = '/var/run/x100speed_transcoder.pid'
-d = Daemon(pidfile)
-d.daemonize()
+#pidfile = '/var/run/x100speed_transcoder.pid'
+#d = Daemon(pidfile)
+#d.daemonize()
 
 app = X100HTTP()
 app.get("/interface/add_staff_ip",                   add_staff_ip)

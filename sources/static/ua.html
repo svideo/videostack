@@ -31,18 +31,18 @@
           <input id="play_url" type="text" class="form-control input-lg" size="48" placeholder="输入m3u8地址" autofocus />
           <input type="button" class="btn btn-default btn-lg" id="play" value="播放" />
         </form>
-      </div> <!-- col-md-8 col-md-offset-2 -->
-    </div> <!-- row -->
+      </div> 
+    </div> 
             
     <div class="container" style="margin-top: 10px;">
       <div class="row">
         <div class="col-md-10 col-md-offset-1">
           <canvas id="player_canvas" width="640" height="360" style="background-color: #000;"></canvas>
-        </div> <!-- col-md-10 col-md-offset-1 -->
-      </div> <!-- row -->
-    </div> <!-- container -->
-  </div> <!-- web -->
-</div> <!-- container -- >
+        </div> 
+      </div> 
+    </div> 
+  </div> 
+</div> 
 
 <div id="mobile" style="display:none">
     <div class="row">
@@ -50,8 +50,8 @@
         <h1>播放视频</h1>
 			<video id="video_play" controls >
 			</video>
-      </div> <!-- col-md-8 col-md-offset-2 -->
-    </div> <!-- row -->
+      </div> 
+    </div> 
 </div>
 
 </body>
@@ -75,16 +75,17 @@ $(document).ready(function(){
   var play_url = getUrlParameter('play_url');
   if (navigator.userAgent.match(/Mobi/)) {
       // mobile!
-	$('#mobile').show();
-	$('#video_play').attr('src', play_url);
-  	$('#video_play')[0].play();
+	  alert("in mobile");
+	  $('#mobile').show();
+	  $('#video_play').attr('src', play_url);
+  	  $('#video_play')[0].play();
   }
   else {
-	alert("in web");
-	$('#web').show();
-	if (play_url.substr(0, 7) == "http://" && play_url.substr(-4, 4) == "m3u8" ) {
-  	  play_m3u8(play_url);
-  	}
+	  alert("in web");
+	  $('#web').show();
+	  if (play_url.substr(0, 7) == "http://" && play_url.substr(-4, 4) == "m3u8" ) {
+  	    play_m3u8(play_url);
+  	  }
   }
 });
 </script>
