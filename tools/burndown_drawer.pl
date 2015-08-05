@@ -2,9 +2,9 @@ use GD::Graph::lines;
 use utf8;
 
 my @data = ( 
-    ["start", "7.22", "7.23", "7.24", "7.25", "7.27", "7.28", "7.29", "7.30", "7.31", "8.1", "8.3", "8.4"],
-    [ 171, 171, 145, 135, 127, 120, 113, 113, 92, 46, 38, 0, 0],
-    [ 171, 156.75, 142.5, 128.25, 114, 99.75, 85.5,71.25, 57, 42.75, 28.5, 14.25, 0],
+    ["start", "8.5", "8.6", "8.7", "8.8", "8.10", "8.11", "8.12", "8.13", "8.14", "8.15", "8.17", "8.18"],
+    [ 199, 179, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [ 199, 182.5, 166, 149.5, 133, 116.5, 100, 83.5, 67, 50.5, 34, 17.5, 0],
 );
 
 my $graph = GD::Graph::lines->new(800, 600);
@@ -16,9 +16,9 @@ $graph->set(
     x_label_position  => 1/2,
     y_label           => 'Workload(Man-Hour)',
     y_number_format   => sub { return int(shift); },
-    title             => 'Second Round (7.22~8.5) Burndown',
-    y_max_value       => 185.25,
-    y_tick_number     => 171/12,
+    title             => 'Second Round (8.5~8.18) Burndown',
+    y_max_value       => 199,
+    y_tick_number     => 199/12,
     y_label_skip      => 1,
 ) or die $graph->error;
 
