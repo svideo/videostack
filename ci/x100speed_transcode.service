@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=forking
-ExecStart=sudo /usr/local/bin/python3 /data/x100speed_transcode/sources/run.py
-ExecStop=sudo /usr/local/bin/python3 /data/x100speed_transcode/sources/shutdown.py
+ExecStart=/usr/local/bin/python3 /data/x100speed_transcode/sources/run.py
 PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
+

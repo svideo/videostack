@@ -6,15 +6,18 @@
 # date : 2015-08-05
 
 INSTALL_PACKAGET_PATH='/data/install'
+PACKAGE_URL='http://videostack.org/package/'
+#PACKAGE_URL='http://10.221.193.64:8000/'
+X100SPEED_TRANSCODE_PACKAGET_URL='http://10.221.193.64:8000/'
 
 # python3
-PYTHON3_URL='http://10.221.193.64:8000/Python-3.4.3.tgz'
+PYTHON3_URL="${PACKAGE_URL}Python-3.4.3.tgz"
 PYTHON3_PACKET='Python-3.4.3.tgz'
 PYTHON3_NAME='Python-3.4.3'
 PYTHON3_BIN_PATH='/usr/local/bin/python3'
 
 # ffmpeg
-FFMPEG_URL='http://10.221.193.64:8000/ffmpeg_install_2.7.2.tar.gz'
+FFMPEG_URL="${PACKAGE_URL}ffmpeg_install_2.7.2.tar.gz"
 FFMPEG_PACKET='ffmpeg_install_2.7.2.tar.gz'
 FFMPEG_NAME='ffmpeg_install_2.7.2'
 FFMPEG_BIN_PATH='/usr/bin/ffmpeg'
@@ -31,7 +34,7 @@ PIP3_SOURCE='http://mirrors.aliyun.com/pypi/simple'
 
 # app
 APP_PATH='/data'
-X100SPEED_TRANSCODE_URL='http://10.221.193.64:8000/x100speed_transcode.tar.gz'
+X100SPEED_TRANSCODE_URL="${X100SPEED_TRANSCODE_PACKAGET_URL}x100speed_transcode.tar.gz"
 X100SPEED_TRANSCODE_PACKET='x100speed_transcode.tar.gz'
 X100SPEED_TRANSCODE_NAME='x100speed_transcode'
 
