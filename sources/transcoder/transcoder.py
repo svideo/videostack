@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os, sys, re, select, subprocess, io, time, shutil, logging
 import urllib.request
+import x100mpegts
 from x100utils.x100config import load_config
 from x100utils.x100util import *
 from x100utils.x100request import http_callback, update_video_status
@@ -105,20 +106,23 @@ class Transcoder:
                 self.log(res, self.video_id, 'update_video_snap_image_count', storage_path)
 
     def segment_request_info(self, filepath, storage_path, file_index):
-        create_time  = file_create_time(filepath)
-        filesize     = str(file_size(filepath))
-        bitrate      = str(self.bitrate)
+        info = x100mpegts.info(filepath)
+        create_time  = info['mtime']
+        filesize     = info['file_size']
+        bitrate      = info['bitrate']
+        frame_count  = info['frame_count']
+        fps          = info['fps']
+
         video_id     = self.video_id
         hostname     = self.config['base']['hostname']
         storage_path = storage_path
-        frame_count  = self.config['segment']['fps_count']
         fragment_id  = file_index
 
         req_info     = request_info_serialize(
-                            video_id=self.video_id, hostname=self.config['base']['hostname'],\
-                            storage_path=storage_path, frame_count=self.config['segment']['fps_count'],\
-                            file_size=str(filesize), fragment_id=file_index, bitrate=str(bitrate),\
-                            fps=self.config['segment']['fps'], create_time=create_time)
+                            video_id=video_id, hostname=hostname,\
+                            storage_path=storage_path, frame_count=frame_count,\
+                            file_size=file_size, fragment_id=file_index, bitrate=bitrate,\
+                            fps=fps, create_time=create_time)
         return req_info
 
     def running(self):

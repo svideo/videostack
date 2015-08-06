@@ -4,6 +4,7 @@ import urllib.request
 import json
 
 class x100Monitor:
+
     def get_uptime(self):
 
         with open('/proc/uptime', 'r') as line:
