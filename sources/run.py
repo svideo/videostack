@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
+import argparse
 from interface.x100speed_interface import *
 from transcoder.transcoder import Transcoder
 from x100http import  X100HTTP, X100Response
 from x100daemon import Daemon
 
-pidfile = '/var/run/x100speed_transcoder.pid'
-d = Daemon(pidfile)
-d.daemonize()
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--daemonize", help="make daemonize", action="store_true")
+args = parser.parse_args()
+
+if args.daemonize:
+    pidfile = '/var/run/x100speed_transcoder.pid'
+    d = Daemon(pidfile)
+    d.daemonize()
 
 app = X100HTTP()
 app.get("/interface/add_staff_ip",                   add_staff_ip)
