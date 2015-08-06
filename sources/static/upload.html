@@ -137,8 +137,8 @@
 
 	function get_m3u8_content() {
 		var m3u8_url = m3u8_hostname + '/interface/' + video_id + '_153.m3u8';
-		var player_url = player_hostname + '/' + 'play.html?play_url=' + m3u8_url;
-		var player_h5_url = player_hostname + '/' + 'play_h5.html?play_url=' + m3u8_url
+		var player_url = player_hostname + '/static/' + 'play.html?play_url=' + m3u8_url;
+		var player_h5_url = player_hostname + '/static/' + 'play_h5.html?play_url=' + m3u8_url
 		$.ajax({
 			url: '',
 			type: "GET",
