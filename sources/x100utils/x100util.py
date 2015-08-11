@@ -31,7 +31,7 @@ def non_blocking_handler(handler):
 def request_info_serialize(**kwargs):
     info = ""
     for k, v in kwargs.items():
-        info += k + '=' + v + '&'
+        info += str(k) + '=' + str(v) + '&'
     return info
 
 def get_target_file(release_dir, filename, file_type):
