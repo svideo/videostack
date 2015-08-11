@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include "common.c"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define TS_PACKET_SIZE 188
 
@@ -34,13 +34,13 @@ struct transport_packet_header * alloc_tph() {
 }
 
 void parse_transport_packet_header(transport_packet_header * tph, char * packet) {
-    tph->transport_error_indicator    = 0b10000000 & packet[1];
+    tph->transport_error_indicator    = packet[1] >> 7;
     tph->payload_unit_start_indicator = packet[1] << 1 >> 7;
-    tph->transport_priority           = 0b00100000 & packet[1];
-    tph->pid                          = 0b0001111111111111 & ( packet[1]<<8 | packet[2] );
-    tph->transport_scrambing_control  = 0b11000000 & packet[3];
-    tph->adaption_field_control       = 0b00110000 & packet[3];
-    tph->continuity_counter           = 0b00001111 & packet[3];
+    tph->transport_priority           = packet[1] << 2 >> 7;
+    tph->pid                          = ( packet[1] << 8 | packet[2] ) << 3 >> 3;
+    tph->transport_scrambing_control  = packet[3] >> 6;
+    tph->adaption_field_control       = packet[3] << 2 >> 6;
+    tph->continuity_counter           = packet[3] << 4 >> 4;
 }
 
 void free_tph(struct transport_packet_header * tph) {
