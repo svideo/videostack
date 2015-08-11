@@ -22,7 +22,7 @@ class TranscoderLogger:
 
 class Transcoder:
     def __init__(self):
-        self.config  = load_config('transcoder/conf/transcoder.conf')
+        self.config  = load_config('conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
         self.logger  = TranscoderLogger(self.config['log']['path']).logger
         self.video_id = ''
