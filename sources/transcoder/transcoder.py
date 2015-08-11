@@ -19,9 +19,10 @@ class TranscoderLogger:
 
         self.logger.addHandler(handler)
 
+
 class Transcoder:
     def __init__(self):
-        self.config  = load_config('conf/transcoder.conf')
+        self.config  = load_config('transcoder/conf/transcoder.conf')
         self.bitrate = int(self.config['segment']['vbitrate']) + int(self.config['segment']['abitrate'])
         self.logger  = TranscoderLogger(self.config['log']['path']).logger
         self.video_id = ''
@@ -108,7 +109,7 @@ class Transcoder:
     def segment_request_info(self, filepath, storage_path, file_index):
         info = x100mpegts.info(filepath)
         create_time  = info['mtime']
-        filesize     = info['file_size']
+        file_size     = info['file_size']
         bitrate      = info['bitrate']
         frame_count  = info['frame_count']
         fps          = info['fps']
@@ -139,3 +140,4 @@ class Transcoder:
         request_info = request_info_serialize(video_id=self.video_id, status='success', bitrate=str(self.bitrate))
         res = http_callback(self.config['url']['update_video_status'], request_info)
         self.log(res, self.video_id, 'update_video_status', None)
+
