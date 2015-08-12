@@ -43,6 +43,7 @@ class Transcoder:
 
         elif key == b'upload':
             self.run_cmd_async(line)
+            self.write_original_file(line)
 
     def upload_finish(self,req):
         return "your file uploaded."
@@ -51,6 +52,7 @@ class Transcoder:
         cmd = build_cmd(self.video_id)
         print(cmd)
         self.logger.info("ffmpeg_cmd: %s" % cmd)
+        self.open_original_file_handler()
         p = subprocess.Popen(cmd, bufsize=0, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         self.stdout = p.stdout
         self.stdin  = p.stdin
@@ -141,3 +143,9 @@ class Transcoder:
         res = http_callback(self.config['url']['update_video_status'], request_info)
         self.log(res, self.video_id, 'update_video_status', None)
 
+    def open_original_file_handler(self):
+        filename = self.config['transcode']['dir'] + '/' + self.video_id
+        self.original_file_handler = open(filename, 'wb+')
+
+    def write_original_file(self, line):
+        self.original_file_handler.write(line)

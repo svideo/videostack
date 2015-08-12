@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import os, configparser
+import os, configparser, sys
 
 def load_config(configfile):
-    configfile = 'conf/transcoder.conf'
+    #configfile = 'conf/transcoder.conf'
     if not os.path.exists(configfile):
         print("no config file")
         sys.exit(1)
