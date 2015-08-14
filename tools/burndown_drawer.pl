@@ -16,7 +16,7 @@ $graph->set(
     x_label_position  => 1/2,
     y_label           => 'Workload(Man-Hour)',
     y_number_format   => sub { return int(shift); },
-    title             => 'Second Round (8.5~8.18) Burndown',
+    title             => 'Fourth Round (8.5~8.18) Burndown',
     y_max_value       => 199,
     y_tick_number     => 199/12,
     y_label_skip      => 1,
