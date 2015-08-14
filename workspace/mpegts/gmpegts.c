@@ -120,6 +120,7 @@ int main() {
         int payload_size = TS_PACKET_SIZE - payload_offset;
         memcpy(buf + payload_offset, unit->buffer + unit->buffer_offset, payload_size);
         unit->buffer_offset += payload_size;
+        unit->pid = tph->pid;
         printf("[%d]\n", unit->buffer_offset);
 
         packet_id++;
