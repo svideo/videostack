@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, os, subprocess, re
+import sys, os, subprocess, re, time
 sys.path.append('../x100utils')
 from x100config import load_config
 
@@ -27,16 +27,13 @@ class TranscodeOriginFile:
         file_path = 'data/ywOVs9MIA8AUUMSSuI_16.ts'
         return file_path
 
-    def origin_file_analysis(origin_file):
-        pass
-
     def detect_cmd(self):
         cmd = ""
         cmd += "ffmpeg -i " + self.input_file
         cmd += " -filter_complex \"split=2[v0][v1],"
         cmd += "[v0]scale=\"w=floor\\(iw*288/ih/8\\)*8:h=288\"[o0],"
         cmd += "[v1]crop=64:32:in_w/2:in_h/2,idet[o1]\""
-        cmd += " -map [o0] -c:v libx264 -x264opts crf=31:ssim -an -f flv -y /dev/null"
+        cmd += " -map [o0] -c:v libx264 -x264opts crf="+ self.config['crf'] + ":ssim -an -f flv -y /dev/null"
         cmd += " -map [o1] -f rawvideo -y /dev/null"
         return cmd
 
@@ -47,6 +44,7 @@ class TranscodeOriginFile:
             br_re = re.search('bitrate=\s+(.*?)kbits\/s', line)
             if br_re:
                 bitrate = br_re.group(1)
+                break
 
         return int( (1080/288)**1.5 * float(bitrate) + 0.5)
 
@@ -64,25 +62,48 @@ class TranscodeOriginFile:
 
         return cmd
 
+    def mediainfo(self):
+        pass
+
+    def get_convert_type(self):
+        # 要根据原视频的的信息来计算出需要转码的类型
+        return ['UHD', 'FHD', 'HD', 'SD']
+
     def pass1_cmd(self):
         self.x264opts = self.get_x264opts()
         convert_pass1_cmd = ""
         convert_pass1_cmd += "ffmpeg -i " + self.input_file
         convert_pass1_cmd += " -vf yadif"
         convert_pass1_cmd += " -c:v libx264 -x264opts " + self.x264opts
-        convert_pass1_cmd += ":pass=1:stats=tmp/" + self.filename + ".tmp.flv"
-        convert_pass1_cmd += " -c:a libfdk_aac -profile:a aac_he -b:a " + self.config['abitrate']
+        convert_pass1_cmd += ":pass=1:stats=tmp/" + self.filename + ".tmp.passlog"
+        convert_pass1_cmd += " -c:a libfdk_aac -profile:a aac_he -b:a " + self.config['abitrate'] + "k"
         convert_pass1_cmd += " -f flv -y /dev/null"
 
         return convert_pass1_cmd
 
     def pass2_cmd(self):
+        convert_types = self.get_convert_type()
+        print(convert_types)
+
         convert_pass2_cmd = "";
         convert_pass2_cmd += "ffmpeg -i " + self.input_file
-        convert_pass2_cmd += " -vf yadif -c:v libx264 "
-        convert_pass2_cmd += " -x264opts " + self.x264opts + ":pass=2:stats=tmp/" + self.filename + ".tmp.flv"
-        convert_pass2_cmd += " -c:a libfdk_aac -profile:a aac_he -b:a " + self.config['abitrate']
-        convert_pass2_cmd += " -f flv -y " + self.output_file
+        convert_pass2_cmd += " -filter_complex \"split=" + str(len(convert_types))
+        for i in range(len(convert_types)):
+            convert_pass2_cmd += "[v" + str(i) + "]"
+        convert_pass2_cmd += ","
+
+        for index, convert_type in enumerate(convert_types):
+            convert_pass2_cmd += "[v" + str(index) + "]" + "scale=" + self.config['scale_'+convert_type] + "[o" + str(index) + "],"
+        convert_pass2_cmd = re.sub(r",$", "", convert_pass2_cmd)
+
+        convert_pass2_cmd += "\""
+
+        for index, convert_type in enumerate(convert_types):
+            convert_pass2_cmd += " -map "
+            convert_pass2_cmd += "[o" + str(index) + "]" + " -c:v libx264 -x264opts "
+            convert_pass2_cmd += " bitrate=" + self.config["vbitrate_" + convert_type] + self.config['x264opts']
+            convert_pass2_cmd += " -c:a libfdk_aac -profile:a aac_he -b:a " + self.config['abitrate'] + 'k'
+            convert_pass2_cmd += " -f flv -y " + "tmp/" + self.filename + "_" + convert_type + ".flv"
 
         return convert_pass2_cmd
 
@@ -109,11 +130,14 @@ class TranscodeOriginFile:
             return
         print("video_file: %s convert success" % (self.input_file))
 
+    def __del__(self):
+        pass
 
 
 if __name__ == "__main__":
     t = TranscodeOriginFile(
             configfile = './conf/transcode_origin_file.conf',
             video_type = 'default',
-            resolution = 'SD',)
+            resolution = 'SD')
+
     t.run()
