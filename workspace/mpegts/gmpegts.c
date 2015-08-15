@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "common.c"
+#include "x100mpegts.h"
 
 #define DEBUG 1
 
@@ -11,17 +12,6 @@
 #define TS_PACKET_HEADER_SIZE 4
 #define PID_PAT 0
 
-typedef struct transport_packet_header {
-    unsigned int transport_error_indicator:1;
-    unsigned int payload_unit_start_indicator:1;
-    unsigned int transport_priority:1;
-    unsigned int pid:13;
-    unsigned int transport_scrambing_control:2;
-    unsigned int adaption_field_control:2;
-    unsigned int continuity_counter:4;
-
-    unsigned int adaptation_fields_length:8;
-} transport_packet_header;
 
 void debug_transport_packet_header( struct transport_packet_header * tph) {
     printf("transport_error_indicator: %d\t", tph->transport_error_indicator);
@@ -63,14 +53,6 @@ void free_tph(struct transport_packet_header * tph) {
     free(tph);
 }
 
-typedef struct unit {
-    char * buffer;
-    int buffer_offset;
-    int buffer_active_length;
-    int buffer_total_length;
-    int pid;
-} unit;
-
 struct unit * alloc_unit() {
     struct unit * unit = calloc(1, sizeof(unit));
     unit->buffer = calloc(1, UNIT_BUF_SIZE);
@@ -80,7 +62,9 @@ struct unit * alloc_unit() {
     return unit;
 }
 
-void parse_unit(struct unit * unit) {
+void parse_unit(struct unit * unit, struct pid_table * pid_table) {
+    if(unit->pid == pid_table->pid_pat)
+        printf("PAT found\n");
 }
 
 void reset_unit(struct unit * unit) {
@@ -94,6 +78,20 @@ void free_unit(struct unit * unit) {
     free(unit);
 }
 
+struct pid_table * alloc_pid_table() {
+    struct pid_table * pid_table = calloc(1, sizeof(pid_table));
+    pid_table->pid_pat = 0; // will not change
+    pid_table->pid_cat = 1; // will not change
+    pid_table->pid_pmt = 0; // will not change
+    pid_table->pid_video = 0; // will not change
+    pid_table->pid_audio = 0; // will not change
+    return pid_table;
+}
+
+void free_pid_table(struct pid_table * pid_table) {
+    free(pid_table);
+}
+
 int main() {
     const char *path = "cku.ts";
 
@@ -102,6 +100,7 @@ int main() {
 
     struct transport_packet_header * tph = alloc_tph();
     struct unit * unit = alloc_unit();
+    struct pid_table * pid_table = alloc_pid_table();
     int packet_id = 0;
 
     while(fread(buf, TS_PACKET_SIZE, 1, fp)) {
@@ -112,7 +111,7 @@ int main() {
 
         parse_transport_packet_header(tph, buf);
         if (tph->payload_unit_start_indicator == 1 && packet_id > 0) {
-            parse_unit(unit);
+            parse_unit(unit, pid_table);
             reset_unit(unit);
         }
 
@@ -132,6 +131,7 @@ int main() {
 
     free_tph(tph);
     free_unit(unit);
+    free_pid_table(pid_table);
 
     return 0;
 }
