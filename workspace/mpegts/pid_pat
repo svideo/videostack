@@ -1,0 +1,7 @@
+gmpegts.c:    if(unit->pid == pid_table->pid_pat) {
+gmpegts.c:        printf("[%d]=[%d]PAT found\n", unit->pid, pid_table->pid_pat);
+x100mpegts_alloc.c:    pid_table->pid_pat = 0; // will not change
+x100mpegts_alloc.c:    pid_table->pid_cat = 1; // will not change
+x100mpegts_alloc.c:    pid_table->pid_pmt = 0; // will not change
+x100mpegts_alloc.c:    pid_table->pid_video = 0; // will not change
+x100mpegts_alloc.c:    pid_table->pid_audio = 0; // will not change
