@@ -49,3 +49,14 @@ struct program_association_table * alloc_pat() {
 void free_pat(struct program_association_table * pat) {
     free(pat);
 }
+
+struct program_map_table * alloc_pmt() {
+    struct program_map_table * pmt = calloc(1, sizeof(struct program_map_table));
+    memset(pmt, 0, sizeof(struct program_map_table));
+    return pmt;
+}
+
+void free_pmt(struct program_map_table * pmt) {
+    free(pmt);
+}
+

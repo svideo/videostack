@@ -25,7 +25,7 @@ typedef struct transport_packet_header {
 } transport_packet_header;
 
 typedef struct unit {
-    char * buffer;
+    unsigned char * buffer;
     int buffer_offset;
     int buffer_total_length;
     int pid;
@@ -43,6 +43,28 @@ typedef struct program_association_table {
     unsigned int current_next_indicator:1;
     unsigned int section_number:8;
     unsigned int last_section_number:8;
+    unsigned int program_number:16;
+    unsigned int :3;
+    unsigned int program_map_pid:13;
     unsigned int crc_32:32;
 } program_association_table;
+
+typedef struct program_map_table {
+    unsigned int table_id:8;
+    unsigned int section_syntax_indicator:1;
+    unsigned int :1;
+    unsigned int reserved0:2;
+    unsigned int section_length:12;
+    unsigned int program_number:16;
+    unsigned int reserved1:2;
+    unsigned int version_number:5;
+    unsigned int current_next_indicator:1;
+    unsigned int section_number:8;
+    unsigned int last_section_number:8;
+    unsigned int reserved2:3;
+    unsigned int pcr_pid:13;
+    unsigned int reserved3:4;
+    unsigned int program_info_length:12;
+    unsigned int crc_32:32;
+} program_map_table;
 
