@@ -44,8 +44,13 @@ int main() {
     struct pid_table * pid_table = alloc_pid_table();
     struct program_association_table * pat = alloc_pat();
     int packet_id = 0;
+    int packet_wanted_number = 100000;
+    int section_wanted_number = 2;
 
     while(fread(buf, TS_PACKET_SIZE, 1, fp)) {
+        if (!packet_wanted_number)
+            return 0;
+
         if ( buf[0] != 0x47 ) {
             printf("wrong sync_byte\n");
             return -1;
@@ -54,18 +59,25 @@ int main() {
         parse_transport_packet_header(tph, buf);
 
         if (tph->payload_unit_start_indicator == 1 && packet_id > 0) {
+            if(!section_wanted_number)
+                return 0;
+            
+            printf("[%d]", unit->pid);
+            hex_print(unit->buffer, unit->buffer_offset);
             parse_unit(unit, pid_table, pat);
             reset_unit(unit);
+            section_wanted_number--;
         }
 
         int payload_offset = TS_PACKET_HEADER_SIZE + tph->adaptation_fields_length;
         int payload_size = TS_PACKET_SIZE - payload_offset;
-        memcpy(buf + payload_offset, unit->buffer + unit->buffer_offset, payload_size);
+        memcpy(unit->buffer + unit->buffer_offset, buf + payload_offset, payload_size);
         unit->buffer_offset += payload_size;
         unit->pid = tph->pid;
         //printf("[%d]\n", unit->buffer_offset);
 
         packet_id++;
+        packet_wanted_number--;
 
 #if DEBUG
         //debug_transport_packet_header(tph);
