@@ -1,5 +1,13 @@
+<!--
+# author : Ren Peng
+# github : https://github.com/svideo/x100speed_transcode.git
+# description : Redis Storage Design
+# date : 2015-08-17
+-->
+
 API Reference
 ============================
+
 ### /interface/add\_staff\_ip
 #### 描述
     添加staff转码机ip地址

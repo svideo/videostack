@@ -1,3 +1,10 @@
+<!--
+# author : Ren Peng
+# github : https://github.com/svideo/x100speed_transcode.git
+# description : Redis Storage Design
+# date : 2015-08-17
+-->
+
 Redis Storage Design
 =======================================
 
@@ -47,4 +54,16 @@ Redis Storage Design
     
     更新staff主机load
     HSET x100speed_hash_staff 192.168.1.100 1
+
+### x100speed\_ip\_list
+#### 描述
+    使用list结构存储转码机(ip)对应待转多个清晰度的videoid
+| Describe   | Data Structure | Key                        | Value              |
+| ---------- |:--------------:|:--------------------------:|:------------------:|
+| field name | list           | x100speed\_ip\_list        | videoid            |
+| example    | list           | x100speed\_10.0.2.15\_list | yxzpnmliogGqG2cADk |
+
+#### 操作
+    添加待转多清晰度videoid
+    RPUSH x100speed_10.0.2.15_list yxzpnmliogGqG2cADk
     
