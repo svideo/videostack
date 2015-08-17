@@ -26,7 +26,9 @@ typedef struct pid_table {
     unsigned int pid_cat;
     unsigned int pid_pmt;
     unsigned int pid_video;
+    unsigned int video_codec_id;
     unsigned int pid_audio;
+    unsigned int audio_codec_id;
 } pid_table;
 
 typedef struct transport_packet_header {

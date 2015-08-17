@@ -1,5 +1,5 @@
-#include "common.c"
 #include "x100mpegts.h"
+#include "common.c"
 #include "x100mpegts_debug.c"
 #include "x100mpegts_alloc.c"
 

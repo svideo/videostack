@@ -39,8 +39,8 @@ void binary_print(int buf) {
     printf("\n");
 }
 
-static char * show_code_type_str(int code_type){
-    switch(code_type){
+char * get_stream_name(int codec_id){
+    switch(codec_id){
         case  STREAM_TYPE_VIDEO_MPEG1  :
         case  STREAM_TYPE_AUDIO_MPEG1    :
             return "mpeg1";
@@ -85,5 +85,33 @@ static char * show_code_type_str(int code_type){
         default:
             return "nil";
             break;
+    }
+}
+
+char get_stream_type(int codec_id){
+    switch(codec_id){
+        case  STREAM_TYPE_VIDEO_MPEG1    :
+        case  STREAM_TYPE_VIDEO_MPEG2    :
+        case  STREAM_TYPE_VIDEO_MPEG4    :
+        case  STREAM_TYPE_VIDEO_H264     :
+        case  STREAM_TYPE_VIDEO_CAVS     :
+        case  STREAM_TYPE_VIDEO_VC1      :
+        case  STREAM_TYPE_VIDEO_DIRAC    :
+            return 'v'; //VIDEO
+            break;
+        case  STREAM_TYPE_PRIVATE_SECTION:
+        case  STREAM_TYPE_PRIVATE_DATA   :
+            return 'm'; //META
+            break;
+        case  STREAM_TYPE_AUDIO_MPEG1    :
+        case  STREAM_TYPE_AUDIO_MPEG2    :
+        case  STREAM_TYPE_AUDIO_AAC      :
+        case  STREAM_TYPE_AUDIO_AAC_LATM :
+        case  STREAM_TYPE_AUDIO_AC3      :
+        case  STREAM_TYPE_AUDIO_DTS      :
+            return 'a'; //AUDIO
+            break;
+        default:
+            return 'n'; //NIL
     }
 }
