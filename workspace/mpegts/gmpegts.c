@@ -30,7 +30,7 @@ void parse_pat(struct unit * unit, struct pid_table * pid_table, struct program_
     pat->section_number = unit->buffer[6];
     pat->last_section_number = unit->buffer[7];
     pat->program_number = unit->buffer[8] << 8 | unit->buffer[9];
-    pat->program_map_pid = (unit->buffer[10] << 8 | unit->buffer[11]) & 0x1000;
+    pat->program_map_pid = (unit->buffer[10] << 8 | unit->buffer[11]) & 0x1fff;
     pid_table->pid_pmt = pat->program_map_pid;
     debug_program_association_table(pat);
 }
@@ -42,7 +42,25 @@ void parse_pmt(struct unit * unit, struct pid_table * pid_table, struct program_
     pmt->program_number = unit->buffer[3] << 8 | unit->buffer[4];
     pmt->version_number = unit->buffer[5] & 0x3e;
     pmt->current_next_indicator = unit->buffer[5] & 0x01;
+    pmt->section_number = unit->buffer[6];
+    pmt->last_section_number = unit->buffer[7];
+    pmt->pcr_pid = (unit->buffer[8] << 8 | unit->buffer[9]) & 0x1fff;
+    pmt->program_info_length = (unit->buffer[10] << 8 | unit->buffer[11]) & 0x0fff;
     
+    unsigned int type = unit->buffer[12];
+    unsigned int epid = (unit->buffer[13] << 8 | unit->buffer[14] ) & 0x1fff;
+    unsigned int es_info_length = (unit->buffer[15] << 8 | unit->buffer[16] ) & 0x0fff;
+    printf("type:[%x]", type);
+    printf("pid:[%x]", epid );
+    printf("es_info_length:[%d]", es_info_length );
+
+    unsigned int o = 5;
+    unsigned int type2 = unit->buffer[12 + o];
+    unsigned int epid2 = (unit->buffer[13+o] << 8 | unit->buffer[14+o] ) & 0x1fff;
+    unsigned int es_info_length2 = (unit->buffer[15+o] << 8 | unit->buffer[16+o] ) & 0x0fff;
+    printf("type:[%x]", type2 );
+    printf("pid:[%x]", epid2 );
+    printf("es_info_length:[%d]", es_info_length2 );
     debug_program_map_table(pmt);
 }
 

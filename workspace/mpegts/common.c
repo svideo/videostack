@@ -39,3 +39,51 @@ void binary_print(int buf) {
     printf("\n");
 }
 
+static char * show_code_type_str(int code_type){
+    switch(code_type){
+        case  STREAM_TYPE_VIDEO_MPEG1  :
+        case  STREAM_TYPE_AUDIO_MPEG1    :
+            return "mpeg1";
+            break;
+        case  STREAM_TYPE_VIDEO_MPEG2    :
+        case  STREAM_TYPE_AUDIO_MPEG2    :
+            return "mpeg2";
+            break;
+        case  STREAM_TYPE_PRIVATE_SECTION:
+            return "section";
+            break;
+        case  STREAM_TYPE_PRIVATE_DATA   :
+            return "data";
+            break;
+        case  STREAM_TYPE_AUDIO_AAC      :
+            return "aac";
+            break;
+        case  STREAM_TYPE_AUDIO_AAC_LATM :
+            return "aac-latm";
+            break;
+        case  STREAM_TYPE_VIDEO_MPEG4    :
+            return "mpeg4";
+            break;
+        case  STREAM_TYPE_VIDEO_H264     :
+            return "h264";
+            break;
+        case  STREAM_TYPE_VIDEO_CAVS     :
+            return "cavs";
+            break;
+        case  STREAM_TYPE_VIDEO_VC1      :
+            return "vc1";
+            break;
+        case  STREAM_TYPE_VIDEO_DIRAC    :
+            return "dirac";
+            break;
+        case  STREAM_TYPE_AUDIO_AC3      :
+            return "ac3";
+            break;
+        case  STREAM_TYPE_AUDIO_DTS      :
+            return "dts";
+            break;
+        default:
+            return "nil";
+            break;
+    }
+}
