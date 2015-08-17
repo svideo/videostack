@@ -1,4 +1,5 @@
 from x100http import X100HTTP, X100Response
+from DataStructuresSerialized import DataStructuresSerialized
 import time, redis, x100idgen, hashlib
 
 def add_staff_ip(request):
@@ -97,55 +98,36 @@ def update_video_status(request):
         else:
             response.set_body('{"status":"failed", "message":"redis not have video_id"}')
         return response
-     
-    infor        = ret.decode()
-    string_split = infor.split('|')
-    value        = status
-    for index, item in enumerate(string_split):
-        if index == 0:
-            continue
-        elif index == 2:
-            value += '|' + ip
-        elif index == 3 and status == "proceed":
-            bitrate = request.get_arg('bitrate')
-            if not bitrate:
-                response.set_body('{"status":"failed", "message":"bitrate params is empty"}')
-                return response
+    
+    data_object = DataStructuresSerialized(ret, "|")
 
-            ret = video_bitrate_add(video_id, bitrate)
-            if ret:
-                value += '|' + ret
-            else:
-                value += '|' + bitrate
-        else:
-            value += '|' + item
+    if status == "proceed":
+        bitrate = request.get_arg('bitrate')
+        if not bitrate:
+            response.set_body('{"status":"failed", "message":"bitrate params is empty"}')
+            return response
+
+        data_list      = data_object.getDeserializationStruct()
+        bitrate_list   = DataStructuresSerialized(data_list[3], ',').getDeserializationStruct()
+        bitrate_list.append(bitrate)
+        bitrate_list = list(set(bitrate_list))
+        bitrate_list.sort(key = int)
+        bitrate_string = DataStructuresSerialized(bitrate_list, ',').getSerializedString()
+        bitrate_of_list_index = 3
+        data_object.update(bitrate_of_list_index, bitrate_string)
+
+    status_of_list_index  = 0
+    ip_of_list_index      = 2
+    
+    data_object.update(status_of_list_index, status)
+    data_object.update(ip_of_list_index, ip)
+    
+    value = data_object.getSerializedString()
 
     r.hset('x100speed_hash_videoid', video_id, value)
 
     response.set_body('{"status":"success", "message":""}')
     return response
-
-def video_bitrate_add(video_id, bitrate):
-    if not video_id or not bitrate:
-        return ""
-
-    value = ''
-    r     = redis_connect()
-    ret   = r.hget("x100speed_hash_videoid", video_id)
-    if not ret:
-        return ""
-    
-    infor            = ret.decode()
-    string_split     = infor.split('|')
-    string_split_len = len(string_split)
-
-    bitrates = string_split[3].split(',')
-    bitrates.append(str(bitrate))
-    bitrates = list(set(bitrates))
-    bitrates.sort(key = int)
-    value = ',' . join(bitrates)
-    
-    return value
 
 def update_video_snap_image_count(request):
     video_id         = request.get_arg('video_id')
@@ -166,17 +148,10 @@ def update_video_snap_image_count(request):
         response.set_body('{"status":"failed", "message":"redis not have video_id"}')
         return response
     
-    infor            = ret.decode()
-    string_split     = infor.split('|')
-    string_split_len = len(string_split)
-
-    for index, item in enumerate(string_split):
-        if index == 0:
-            value += item
-        elif index == 1:
-            value += '|' + snap_image_count
-        else :
-           value += '|' + item
+    index = 1
+    data_object = DataStructuresSerialized(ret, "|")
+    data_object.update(index, snap_image_count)
+    value = data_object.getSerializedString()
 
     r.hset('x100speed_hash_videoid', video_id, value)
 

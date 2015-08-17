@@ -29,8 +29,8 @@ REDIS_NAME=''
 REDIS_BIN_PATH='/usr/bin/redis-server'
 
 # require python3 module
-REQUIRE_PYTHON3_MODULE='redis x100http x100idgen x100daemon x100mpegts'
-PIP3_SOURCE='http://mirrors.aliyun.com/pypi/simple'
+REQUIRE_PYTHON3_MODULE='redis x100http x100idgen x100daemon x100mpegts DataStructuresSerialized'
+PIP3_SOURCE='http://pypi.douban.com/simple'
 
 # app
 APP_PATH='/data'
