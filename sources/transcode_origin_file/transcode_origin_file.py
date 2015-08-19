@@ -117,7 +117,7 @@ class TranscodeOriginFile:
     def pass1_cmd(self):
         self.x264opts = self.get_x264opts()
         self.origin_height = self.get_origin_file_height()
-        print( "pass1 origin file resolution %s" % (self.origin_resolution) )
+        print( "pass1 origin file resolution %s" % (self.origin_height) )
         bitrate = self.calculate_bitrate(self.origin_height)
         print("pass1 origin file calculate_bitrate %d " % (bitrate))
 
@@ -145,7 +145,6 @@ class TranscodeOriginFile:
 
         for index, line in enumerate(convert_types):
             (convert_type, height)  = list(line.items())[0]
-
             convert_pass2_cmd += \
                      "[v" + str(index) + "]" + "scale=" + self.config['scale_'+convert_type] + "[o" + str(index) + "],"
 
@@ -163,9 +162,10 @@ class TranscodeOriginFile:
             convert_pass2_cmd += " -map "
             convert_pass2_cmd += "[o" + str(index) + "]" + " -c:v libx264 -x264opts "
             convert_pass2_cmd += " bitrate=" + bitrate + self.config['x264opts']
-            convert_pass2_cmd += ":pass2:stats=" + self.passlog + ":ssim:psnr"
+            convert_pass2_cmd += ":pass=2:stats=" + self.passlog + ":ssim:psnr"
             convert_pass2_cmd += " -c:a libfdk_aac -profile:a aac_he -b:a " + self.config['abitrate'] + 'k'
-            convert_pass2_cmd += " -f flv -y " + "tmp/" + self.filename + "_" + convert_type + ".flv"
+            convert_pass2_cmd += " -f segment -segment_format flv -segment_time " + self.config['segment_time']
+            convert_pass2_cmd += " -y " + "tmp/" + self.filename + "_" + convert_type + "_%d.flv"
 
         return convert_pass2_cmd
 
@@ -184,15 +184,15 @@ class TranscodeOriginFile:
         print(pass1_cmd)
         print("========================")
         print(pass2_cmd)
-        ret = subprocess.check_output(pass1_cmd, shell=True)
-        if ret == 1:
-            print("cmd pass1 %s failed" % (pass1_cmd))
-            return
+        #ret = subprocess.check_output(pass1_cmd, shell=True)
+        #if ret == 1:
+        #    print("cmd pass1 %s failed" % (pass1_cmd))
+        #    return
 
-        ret = subprocess.check_output(pass2_cmd, shell=True)
-        if ret == 1:
-            print("cmd pass2 %s failed" % (pass2_cmd))
-            return
+        #ret = subprocess.check_output(pass2_cmd, shell=True)
+        #if ret == 1:
+        #    print("cmd pass2 %s failed" % (pass2_cmd))
+        #    return
         print("video_file: %s convert success" % (self.input_file))
 
     def __del__(self):
