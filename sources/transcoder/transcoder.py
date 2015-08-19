@@ -49,7 +49,7 @@ class Transcoder:
         return "your file uploaded."
 
     def init_popen_handler(self):
-        cmd = build_cmd(self.video_id)
+        cmd = build_cmd(self.video_id, self.config)
         print(cmd)
         self.logger.info("ffmpeg_cmd: %s" % cmd)
         self.open_original_file_handler()
