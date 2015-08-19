@@ -129,6 +129,91 @@ def update_video_status(request):
     response.set_body('{"status":"success", "message":""}')
     return response
 
+def get_video_multirate_info(request):
+    ip       = request.get_remote_ip()
+    count    = request.get_arg('count')
+    response = X100Response()
+    
+    response.set_header("Access-Control-Allow-Origin", "*")
+    response.set_header("Access-Control-Allow-Methods", "GET")
+
+    if not count:
+        count = 1
+
+    r      = redis_connect()
+    ret    = r.lrange("x100speed_" + ip + "_list", 0, int(count) - 1)
+    length = len(ret)
+    info   = ""
+
+    for item in ret:
+        video_id      = item.decode()
+        video_id_info = r.hget("x100speed_hash_videoid", video_id)
+        video_id_info = video_id_info.decode()
+        info_array    = video_id_info.split('|')
+
+        info += '{"video_id":"' + video_id + '","bitrates":[' + info_array[3] + ']}'
+        length -= 1
+        if length > 0:
+            info += ','    
+
+    video_id_json = '[' + info + ']'
+    
+    response.set_body(video_id_json)
+    return response
+
+def delete_video_id_multirate(request):
+    video_id = request.get_arg('video_id')
+    ip       = request.get_remote_ip()
+    response = X100Response()
+
+    response.set_header("Access-Control-Allow-Origin", "*")
+    response.set_header("Access-Control-Allow-Methods", "GET")
+
+    if not video_id:
+        response.set_body('{"status":"failed", "message":"video_id empty"}')
+        return response
+    
+    r   = redis_connect()
+    ret = r.lrem("x100speed_" + ip + "_list", 1, video_id)
+    
+    response.set_body('{"status":"success", "message":""}')
+    return response
+
+def add_video_id_transcode_bitrate(request):
+    video_id = request.get_arg("video_id")
+    bitrates = request.get_arg("bitrates")
+    response = X100Response()
+
+    response.set_header("Access-Control-Allow-Origin", "*")
+    response.set_header("Access-Control-Allow-Methods", "GET")
+
+    if not video_id or not bitrates:
+        response.set_body('{"status":"failed", "message":"video_id or bitrates empty"}')
+        return response
+
+    add_bitrates_list = bitrates.split(",")
+
+    r   = redis_connect()
+    ret = r.hget("x100speed_hash_videoid", video_id)
+    if not ret:
+        response.set_body('{"status":"failed", "message":"video_id redis not found"}')
+        return response
+    
+    data_object  = DataStructuresSerialized(ret, "|")
+    data_list    = data_object.getDeserializationStruct()
+    bitrate_list = DataStructuresSerialized(data_list[3], ',').getDeserializationStruct()
+    bitrate_list.extend(add_bitrates_list)
+    bitrate_list = list(set(bitrate_list))
+    bitrate_list.sort(key = int)
+    bitrate_string = DataStructuresSerialized(bitrate_list, ',').getSerializedString()
+    bitrate_of_list_index = 3
+    data_object.update(bitrate_of_list_index, bitrate_string)
+
+    ret = r.hset("x100speed_hash_videoid", video_id, data_object.getDeserializationStruct())
+    
+    response.set_body('{"status":"success", "message":""}')
+    return response
+
 def update_video_snap_image_count(request):
     video_id         = request.get_arg('video_id')
     snap_image_count = request.get_arg('snap_image_count')
