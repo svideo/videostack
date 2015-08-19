@@ -73,6 +73,41 @@ API Reference
 #### 示例
     /interface/update_video_status?video_id=ytwQrjkUBWi0u0syEC&status=success
 
+### /interface/get\_video\_multirate\_info
+#### 描述
+    返回video id及已转码完成的清晰度
+#### 参数
+    count    : 获取video_id个数,非必需,默认为1
+#### 返回值
+    json格式返回video id、bitrates
+#### 示例
+     /interface/get_video_multirate_info?video_id=ytwQrjkUBWi0u0syEC&count=5
+
+### /interface/delete\_video\_id\_multirate
+#### 描述
+    删除多清晰度转码队列里video id
+#### 参数
+    video_id : 视频唯一标识
+#### 返回值
+    json格式返回操作状态以及失败原因
+    status  : success、failed
+    message : 失败原因
+#### 示例
+     /interface/delete_video_id_multirate?video_id=ytwQrjkUBWi0u0syEC
+
+### /interface/add\_video\_id\_transcode\_bitrate
+#### 描述
+    添加已完成的清晰度到video id
+#### 参数
+    video_id : 视频唯一标识
+    bitrates : 视频码率,添加多个码率用逗号隔开
+#### 返回值
+    json格式返回操作状态以及失败原因
+    status  : success、failed
+    message : 失败原因
+#### 示例
+     /interface/add_video_id_transcode_bitrate?video_id=ytwQrjkUBWi0u0syEC&bitrates=200,400
+
 ### /interface/update\_video\_snap\_image\_count
 #### 描述
     更新视频截图数量
