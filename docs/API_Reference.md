@@ -77,7 +77,6 @@ API Reference
 #### 描述
     返回video id及已转码完成的清晰度
 #### 参数
-    video_id : 视频唯一标识
     count    : 获取video_id个数,非必需,默认为1
 #### 返回值
     json格式返回video id、bitrates
