@@ -125,6 +125,9 @@ def update_video_status(request):
     value = data_object.getSerializedString()
 
     r.hset('x100speed_hash_videoid', video_id, value)
+    
+    if status == "success":  
+        r.rpush("x100speed_" + ip + "_list", video_id)
 
     response.set_body('{"status":"success", "message":""}')
     return response
