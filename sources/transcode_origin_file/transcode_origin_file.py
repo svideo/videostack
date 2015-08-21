@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import sys, os, subprocess, re, time
+import sys, os, subprocess, re, time, json
+import requests
 sys.path.append('../x100utils')
 from x100config import load_config
 
@@ -22,10 +23,19 @@ class TranscodeOriginFile:
             return None
         return res.group(1)
 
+    def request(self, url):
+        r = requests.get(url)
+        body = r.json()
+        return body
+
     def get_video_file(self):
-        # request api to get file
-        file_path = '/data1/queue/ywOVs9MIA8AUUMSSuI'
-        #file_path = 'data/ywOVs9MIA8AUUMSSuI_16.ts'
+        resp = self.request(self.config['get_video_multibitrate_info'])
+        for line in resp:
+            video_id = line['video_id']
+            self.converted_bitrates = line['bitrates']
+
+        file_path = self.config['origin_file_path'] + '/' + video_id
+
         return file_path
 
     def detect_cmd(self):
@@ -50,7 +60,7 @@ class TranscodeOriginFile:
         self.bitrate = bitrate
         print( "cif bitrate %s" % (bitrate) )
 
-        return self.calculate_bitrate(1080)
+        return self.calculate_bitrate(1080) # 必须用1080 去侦测一个信息
 
     def calculate_bitrate(self, resolution):
         return int( (int(resolution)/288)**1.5 * float(self.bitrate) + 0.5 )
@@ -76,7 +86,7 @@ class TranscodeOriginFile:
         return 797
 
     def get_origin_file_height(self):
-        return 432
+        return 720
 
     def get_origin_file_resolution(self):
         origin_bitrate = self.get_origin_file_bitrate()
@@ -92,27 +102,55 @@ class TranscodeOriginFile:
         if origin_bitrate >= int(self.config['vbitrate_SD']) or origin_bitrate < int(self.config['vbitrate_SD']):
             return 360
 
-    def get_convert_types(self):
+    def serialize_need_convert_types(self):
         # 要根据原视频的的信息来计算出需要转码的类型
-        origin_bitrate = self.get_origin_file_bitrate()
+        need_convert_types = self.need_convert_types()
         convert_types = []
-        if origin_bitrate >= int(self.config['vbitrate_UHD']):
-            height_UHD = self.config['height_UHD']
-            convert_types.append({'UHD':height_UHD})
-
-        if origin_bitrate >= int(self.config['vbitrate_FHD']):
-            height_FHD = self.config['height_FHD']
-            convert_types.append({'FHD':height_FHD})
-
-        if origin_bitrate >= int(self.config['vbitrate_HD']):
-            height_HD = self.config['height_HD']
-            convert_types.append({'HD':height_HD})
-
-        if origin_bitrate >= int(self.config['vbitrate_SD']) or origin_bitrate < int(self.config['vbitrate_SD']):
-            height_SD = self.config['height_SD']
-            convert_types.append({'SD':height_SD})
+        for cvt_type in need_convert_types:
+            height = self.config['height_' + cvt_type]
+            convert_types.append({cvt_type:height})
 
         return convert_types
+
+    def all_convert_bitrates(self):
+        origin_height = self.get_origin_file_height()
+        all_convert_bitrates = []
+        if origin_height >= int(self.config['height_UHD']):
+            all_convert_bitrates.append(self.config['vbitrate_UHD'])
+
+        if origin_height >= int(self.config['height_FHD']):
+            all_convert_bitrates.append(self.config['vbitrate_FHD'])
+
+        if origin_height >= int(self.config['height_HD']):
+            all_convert_bitrates.append(self.config['vbitrate_HD'])
+
+        if origin_height >= int(self.config['height_SD']) or origin_height < int(self.config['height_SD']):
+            all_convert_bitrates.append(self.config['vbitrate_SD'])
+
+        return all_convert_bitrates
+
+    def need_convert_bitrates(self):
+        all_convert_bitrates = self.all_convert_bitrates()
+
+        all_convert_bitrates.append('153') # 接口设计不合理吧，返回信息，还需要我做非常多的处理，重复处理,这一步很他妈多余
+
+        need_convert_bitrates = self.list_diff(all_convert_bitrates, self.converted_bitrates)
+
+        return need_convert_bitrates
+
+    def need_convert_types(self):
+        need_convert_bitrates = self.need_convert_bitrates()
+        need_convert_types = []
+        for bitrate in need_convert_bitrates:
+            need_convert_types.append(self.config['br'+bitrate+'_to_type'])
+
+        return need_convert_types
+
+    def list_diff(self, a, b):
+        a = map(str, a)
+        b = map(str, b)
+        b = set(b)
+        return [aa for aa in a if aa not in b]
 
     def pass1_cmd(self):
         self.x264opts = self.get_x264opts()
@@ -132,7 +170,7 @@ class TranscodeOriginFile:
         return convert_pass1_cmd
 
     def pass2_cmd(self):
-        convert_types = self.get_convert_types()
+        convert_types = self.serialize_need_convert_types()
         print(convert_types)
 
         convert_pass2_cmd = "";
@@ -181,18 +219,15 @@ class TranscodeOriginFile:
     def run(self):
         pass1_cmd = self.pass1_cmd()
         pass2_cmd = self.pass2_cmd()
-        print(pass1_cmd)
-        print("========================")
-        print(pass2_cmd)
-        #ret = subprocess.check_output(pass1_cmd, shell=True)
-        #if ret == 1:
-        #    print("cmd pass1 %s failed" % (pass1_cmd))
-        #    return
+        ret = subprocess.check_output(pass1_cmd, shell=True)
+        if ret == 1:
+            print("cmd pass1 %s failed" % (pass1_cmd))
+            return
 
-        #ret = subprocess.check_output(pass2_cmd, shell=True)
-        #if ret == 1:
-        #    print("cmd pass2 %s failed" % (pass2_cmd))
-        #    return
+        ret = subprocess.check_output(pass2_cmd, shell=True)
+        if ret == 1:
+            print("cmd pass2 %s failed" % (pass2_cmd))
+            return
         print("video_file: %s convert success" % (self.input_file))
 
     def __del__(self):
@@ -204,5 +239,4 @@ if __name__ == "__main__":
             configfile = './conf/transcode_origin_file.conf',
             video_type = 'default',
             resolution = 'SD')
-
     t.run()
