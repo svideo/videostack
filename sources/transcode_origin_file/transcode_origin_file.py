@@ -11,6 +11,8 @@ class TranscodeOriginFile:
         resolution  = kwargs['resolution'] # SD
         self.conf = load_config(configfile)
 
+        self.need_convert_bitrates = []
+        self.video_id    = ""
         self.config      = self.conf[video_type]
         self.input_file  = self.get_video_file()
         self.filename    = self.get_filename(self.input_file)
@@ -23,18 +25,22 @@ class TranscodeOriginFile:
             return None
         return res.group(1)
 
-    def request(self, url):
-        r = requests.get(url)
-        body = r.json()
-        return body
+    def request(self, url, **kwargs):
+        if 'none' in kwargs:
+            kwargs = None
+
+        r = requests.get(url, params=kwargs)
+        res = r.json()
+
+        return res
 
     def get_video_file(self):
-        resp = self.request(self.config['get_video_multibitrate_info'])
+        resp = self.request(self.config['get_video_multibitrate_info'], none=None)
         for line in resp:
-            video_id = line['video_id']
+            self.video_id = line['video_id']
             self.converted_bitrates = line['bitrates']
 
-        file_path = self.config['origin_file_path'] + '/' + video_id
+        file_path = self.config['origin_file_path'] + '/' + self.video_id
 
         return file_path
 
@@ -136,6 +142,7 @@ class TranscodeOriginFile:
 
         need_convert_bitrates = self.list_diff(all_convert_bitrates, self.converted_bitrates)
 
+        self.need_convert_bitrates = need_convert_bitrates
         return need_convert_bitrates
 
     def need_convert_types(self):
@@ -228,6 +235,19 @@ class TranscodeOriginFile:
         if ret == 1:
             print("cmd pass2 %s failed" % (pass2_cmd))
             return
+
+        res = request(self.config['add_video_id_transcode_bitrate'],
+                      video_id=self.video_id,
+                      bitrates=",".join(self.need_convert_bitrates) )
+        if res['status'] == 'failed':
+            print("api: add_video_id_transcode_bitrate request failed [reason] %s" % (res['message']))
+            return
+
+        res = request(self.config['delete_video_multirate'], video_id=self.video_id)
+        if res['status'] == 'failed':
+            print("api: delete_video_multirate request failed [reason] %s" % (res['message']))
+            return
+
         print("video_file: %s convert success" % (self.input_file))
 
     def __del__(self):
