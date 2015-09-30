@@ -36,32 +36,6 @@ VideoStack开发完成了吗？
 2. 在后续的开发中，我们会仔细考虑旧版本API的兼容问题，尽量不破坏它。
 
 
-如何体验VideoStack？
--------------------
-
-1. 可以在http://demo.videostack.org 看到演示并操作一个演示用的VideoStack集群；
-
-2. 用户名密码都是videostack，每天凌晨重置至初始状态；
-
-
-我需要做什么？
--------------
-
-1. 准备好服务器和带宽；
-
-2. 按照http://www.videostack.org/install 的步骤部署VideoStack；
-
-
-使用手册在哪？
--------------
-
-1. 设计文档 - http://www.videostack.org/design  
-
-2. 安装手册 - http://www.videostack.org/install
-
-3. API文档 - http://www.videostack.org/api
-
-
 VideoStack使用了哪些开源／免费的软件项目？
 -----------------------------------------
 
