@@ -41,12 +41,12 @@ VideoStack使用了哪些开源／免费的软件项目？
 
 VideoStack使用了以下开源项目，我们对它们的编写者们表示由衷感谢。
 
-FFmpeg - http://ffmpeg.org/  
+FFmpeg - http://ffmpeg.org
 
-Varnish - https://www.varnish-cache.org/  
+Varnish - https://www.varnish-cache.org
 
-Python - https://www.python.org/
+Python - https://www.python.org
 
-Redis - http://redis.io/
+Redis - http://redis.io
 
-MySQL - https://www.mysql.com/
+MySQL - https://www.mysql.com
