@@ -23,7 +23,7 @@ VideoStack开发方式是什么样的？
 
 1. VideoStack使用大量的，包括Python、FFmpeg、Varnish在内的开源／免费软件，使它们成为理想的基础设施。VideoStack不重复解决优秀软件已经解决的问题；
 
-2. 发布周期为半年，期间穿插频繁的里程碑。另外，你可以从http://snapshots.videostack.org 下载到我们的每日构建版本；
+2. 发布周期为半年，期间穿插频繁的里程碑；
 
 3. 可以抽象出来的部分作为独立的项目来维护，如x100http、x100redis2mysql、x100FFmpegWrapper。
 
